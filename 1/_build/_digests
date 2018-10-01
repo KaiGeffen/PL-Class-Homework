@@ -1,0 +1,5 @@
+"Resource: /Users/kiv/Desktop/631/1/main.ml": "\251?N\147\020\225\183\165$\180\168n\224\204\251\129"
+"Rule: ocaml: ml -> d.cmo & cmi (%=main )": "\204\231\0019\205z\136\182\027S\011L\004\195\216U"
+"Rule: ocaml: ml -> cmo & cmi (%=main )": "E\197\015W\251\007\1927\136tR\146I\226\220y"
+"Rule: ocaml dependencies ml (%=main )": "\174m\028\192\r\005R\r\166\023\024~\182\174;j"
+"Rule: ocaml: d.cmo* -> d.byte (%=main )": "p\140GK\135\029\197\172i\210\021-pS\168q"
