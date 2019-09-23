@@ -32,7 +32,7 @@ let rec unfold (p : 'b -> bool) (g : 'b -> 'a * 'b) (acc : 'b) : 'a list =
       a :: (unfold p g acc')
 
 let length (lst : 'a list) : int =
-  foldr (fun _ y -> 1 + y) 0 lst
+  foldr (fun _ x -> 1 + x) 0 lst
 
 let%TEST "[length] length of empty list is 0" = length [] = 0
 let%TEST "[length] length of single element list is 1" = length [true] = 1
@@ -48,7 +48,7 @@ let%TEST "[filter] filtering a single element list returns empty list if it does
 let%TEST "[filter] filtering a multi-element works correctly" = filter is_even [8;10;3;3;4;4;1] = [8;10;4;4]
 
 let build_list (f : int -> 'a) (len : int) : 'a list =
-  unfold (fun x -> x = len) (fun x -> (f x, x + 1)) 0
+  unfold (fun cur_len -> cur_len = len) (fun x -> (f x, x + 1)) 0
 
 let%TEST "[build_list] building a length 0 list yields empty list" = build_list is_even 0 = []
 let%TEST "[build_list] building a length 1 list yields a correct single element list" = build_list is_even 1 = [true]
