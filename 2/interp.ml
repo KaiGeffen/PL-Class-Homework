@@ -19,13 +19,27 @@ open Interp_util
 (* TODO Long match on full language *)
 let interp (e : exp) : exp =
 	match e with
-		| _ -> e
-		| _ -> failwith "not yet implemented"
+		| Id x -> failwith "not yet implemented"
+		| Const c -> failwith "not yet implemented"
+		| Op2 (op, e1, e2) -> failwith "not yet implemented"
+		| If (e1, e2, e3) -> failwith "not yet implemented"
+		| Let (x, e1, e2) -> failwith "not yet implemented"
+		| Fun (x, e1) -> failwith "not yet implemented"
+		| Fix (x, e1) -> failwith "not yet implemented"
+		| App (e1, e2) -> failwith "not yet implemented"
+		| Empty -> failwith "not yet implemented"
+		| Cons (e1, e2) -> failwith "not yet implemented"
+		| Head e -> failwith "not yet implemented"
+		| Tail e -> failwith "not yet implemented"
+		| IsEmpty e -> failwith "not yet implemented"
+		| Record r -> failwith "not yet implemented"
+		| GetField (e, str) -> failwith "not yet implemented"
 
 (* Read the input in the format ./interp.d.byte program
 	Where program is a filepath to a program in our grammar
 	Assume a single line program (No \n, more than 0 chars)
 *)
+let _ = print_endline (show_exp (from_file Sys.argv.(1)))
 let _ = print_endline (show_exp (interp (from_file Sys.argv.(1))))
 
 (* TODO lots of tests *)
