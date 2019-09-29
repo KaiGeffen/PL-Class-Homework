@@ -23,13 +23,45 @@ open Interp_util
  *)
 type env = (id * const) list
 
+(* Lookup the given identifier in the given environment
+	return it as a value if it's defined
+ *)
+let rec lookup (x : id) (r : env) : const option =
+	match r with
+		| [] -> None
+		| (hd_id, hd_v) :: tl -> if x = hd_id then Some (hd_v) else lookup x tl
+	
+(* Perform the given binary operation with the expression
+	For invalid applications (eg true + 3), fail
+	Otherwise return the result as an expression
+ *)
+let doOp2 (op : op2) (e1 : exp) (e2 : exp) : exp =
+	match op, e1, e2 with
+		| LT, Const (Int x), Const (Int y) -> Const (Bool (x < y))
+		| GT, Const (Int x), Const (Int y) -> Const (Bool (x > y))
+		(* Equality takes any 2 constants, of int/bool *)
+		| Eq, Const c1, Const c2 -> Const (Bool (c1 = c2))
+		| Add, Const (Int x), Const (Int y) -> Const (Int (x + y))
+		| Sub, Const (Int x), Const (Int y) -> Const (Int (x - y))
+		| Mul, Const (Int x), Const (Int y) -> Const (Int (x * y))
+		| Div, Const (Int x), Const (Int y) -> Const (Int (x / y))
+		| Mod, Const (Int x), Const (Int y) -> Const (Int (x mod y))
+		| _ -> failwith "Attempted op2 application with invalid arguments"
+
 (* TODO Long match on full language, deciding not to use optional args *)
-let interp (e : exp) (r : env) : exp =
+let rec interp (e : exp) (r : env) : exp =
 	match e with
-		| Id x -> failwith "not yet implemented"
-		| Const c -> failwith "not yet implemented"
-		| Op2 (op, e1, e2) -> failwith "not yet implemented"
-		| If (e1, e2, e3) -> failwith "not yet implemented"
+		| Id x -> (match lookup x r with
+			| Some v -> Const v
+			| _ -> failwith "Free identifier"
+		)
+		| Const c -> Const c
+		| Op2 (op, e1, e2) -> doOp2 op (interp e1 r) (interp e2 r)
+		| If (e1, e2, e3) -> (match (interp e1 r) with 
+			| Const (Bool true) -> interp e2 r
+			| Const (Bool false) -> interp e3 r
+			| _ -> failwith "If called with non-bool conditional"
+		)
 		| Let (x, e1, e2) -> failwith "not yet implemented"
 		| Fun (x, e1) -> failwith "not yet implemented"
 		| Fix (x, e1) -> failwith "not yet implemented"
@@ -47,7 +79,7 @@ let interp (e : exp) (r : env) : exp =
 	Assume a single line program (No \n, more than 0 chars)
 *)
 (* let _ = print_endline (show_exp (from_file Sys.argv.(1)))
-let _ = print_endline (show_exp (interp (from_file Sys.argv.(1)))) *)
+let _ = print_endline (show_exp (interp (from_file Sys.argv.(1)) [])) *)
 
 (* TODO lots of tests *)
 let test_interp_throws (e : exp) (r : env) : bool =
@@ -99,7 +131,7 @@ let%TEST "If evaluates to second expression when true" =
 	interp (If (Const (Bool false), Const (Int 1), Const (Int 2))) [] = Const (Int 2)
 let%TEST "If can have an more than a const in its conditional" =
 	interp (If (Op2 (GT, Const (Int (7)), Const (Int (4))),
-		Const (Int 1), Const (Int 2))) [] = Const (Int 2)
+		Const (Int 1), Const (Int 2))) [] = Const (Int 1)
 
 (* -----Fun/Fix/App------- *)
 (* TODO not sure about this, returning a closure might be valid and convenient for our language *)
