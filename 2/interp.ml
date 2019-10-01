@@ -62,7 +62,11 @@ let rec interp (e : exp) (r : env) : exp =
 			| Const (Bool false) -> interp e3 r
 			| _ -> failwith "If called with non-bool conditional"
 		)
-		| Let (x, e1, e2) -> failwith "not yet implemented"
+		| Let (x, e1, e2) -> (match (interp e1 r) with
+			(* r' has the new binding at its head, preventing past bindings from taking precedence on lookup *)
+			| Const c -> interp e2 ((x, c) :: r)
+			| _ -> failwith "Attempted to let bind a value which was not a constant"
+		)
 		| Fun (x, e1) -> failwith "not yet implemented"
 		| Fix (x, e1) -> failwith "not yet implemented"
 		| App (e1, e2) -> failwith "not yet implemented"
@@ -104,6 +108,9 @@ let%TEST "Let binding x can reference itself if it's been defined in scope" =
 	test_interp "let x = 3 in let x = 2 * x in x" "6"
 let%TEST "Let x = x in x is invalid when x isn't yet bound" =
 	test_interp_throws "let x = x in x"
+let%TEST "Let binding a variable doesn't persist it outside of its scope" =
+	test_interp_throws "let x = (let y = 3 in 2 + y) in x + y"
+
 
 (* -------Const------ *)
 let%TEST "Constant number is that number" = test_interp "0" "0"
