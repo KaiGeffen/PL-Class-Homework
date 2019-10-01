@@ -10,6 +10,7 @@
 	Ocaml runs everything from top down, main method not necessary
 	alt g is goto line
 	So far this language is immutable, eg it uses rho but not sigma from the lecture 4
+	The language now includes closures (See 5.1 in lecture 4) but not addr/stores/hash-tables
 *)
 
 (* This is necessary for let%TEST to work. *)
@@ -17,11 +18,18 @@ module PTest = Ppx_test.Test
 
 open Interp_util
 
+(* TODO(kgeffen) Consider putting Env and Closure in an external file *)
 (* Env is an environment in which an expression exists
 	Which maps any number of named ids to values
-	id and const both come from interp_utils
+	The current implementation can have multiple occurence of a given variable,
+	but the most recent one will take precedent
+	Id and const both come from interp_utils
  *)
 type env = (id * const) list
+(* Closure is a function, with the environment it was defined in, id for its argument, and its contents
+	Functions are first-class members, and are valid returns for a program, can be passed partially applied, etc
+ *)
+type closure = (env * id * exp)
 
 (* Lookup the given identifier in the given environment
 	return it as a value if it's defined
@@ -134,8 +142,7 @@ let%TEST "Equality for number and bool returns false" = test_interp "1 == true" 
 let%TEST "Equality for bools works" = test_interp "false == false" "true"
 
 let%TEST "Adding 3 numbers works" = test_interp "3 + 7 + 4" "14"
-let%TEST "Order of operations by the structure of expression, not pemdas" = 
-	test_interp "(7 + 2) * 0" "0"
+let%TEST "Order of operations respects parenthesis" = test_interp "(7 + 2) * 0" "0"
 
 let%TEST "Adding bools is invalid" = test_interp_throws "true + false"
 let%TEST "Dividing by 0 is invalid" = test_interp_throws "12 / 0"
@@ -149,6 +156,19 @@ let%TEST "If evaluates to second expression when true" = test_interp "if false t
 let%TEST "If can have an more than a const in its conditional" = test_interp "if (7 > 4) then 1 else 2" "1"
 
 (* -----Fun/Fix/App------- *)
+let%TEST "Functions are valid return values" = not (test_interp_throws "fun x -> x")
+let%TEST "Fix function is a valid return value" = not (test_interp_throws "fix x -> x")
+let%TEST "Applying identity function works" = test_interp "(fun x -> x) 3" "3"
+let%TEST "Functions can be passed as variables and applied" =
+	test_interp "let foo = fun x -> 2*x in foo 3" "6"
+let%TEST "Functions retain the env they were defined in" =
+	test_interp "let a = 1 in let foo = fun x -> a*x in let a = 2 in foo 1" "1"
+let%TEST "Functions can take functions as arguments" =
+	test_interp "let double = fun x -> 2*x in let lucky = fun f -> f 7 in lucky double" "14"
+let%TEST "Fix works when no recursion occurs" = test_interp "fix x -> if false then x else 3" "3"
+let%TEST "Fix recursive implementation of factorial works" =
+	test_interp "let y = 5 in fix x -> (if y == 0 then 1 else (y * (let y = y-1 in x)))" "120"
+
 (* TODO not sure about this, returning a closure might be valid and convenient for our language *)
 (* let%TEST "Function definition alone is not a program" = test_interp_throws (Fun ("x", (Id "x"))) []
 let%TEST "Fix definition alone is not a program" = test_interp_throws (Fix ("x", (Id "x"))) []
