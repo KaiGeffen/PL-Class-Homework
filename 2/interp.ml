@@ -23,18 +23,19 @@ open Interp_util
 	Which maps any number of named ids to values
 	The current implementation can have multiple occurence of a given variable,
 	but the most recent one will take precedent
-	Id and const both come from interp_utils
  *)
-type env = (id * const) list
-(* Closure is a function, with the environment it was defined in, id for its argument, and its contents
+type env = (id * value) list
+(* Values are either constants (int/bool) or closures, and are the only valid return for a program execution
+	Closure is a function, with the environment it was defined in, id for its argument, and its contents (expression)
 	Functions are first-class members, and are valid returns for a program, can be passed partially applied, etc
  *)
-type closure = (env * id * exp)
+and value = 
+(* NOTE(kgeffen) This is a little deceptive, this Const is not an expression (exp), but they look the same *)
+	| Const of const
+	| Closure of env * id * exp
 
-(* Lookup the given identifier in the given environment
-	return it as a value if it's defined
- *)
-let rec lookup (x : id) (r : env) : const option =
+(* Lookup the given identifier in the given environment. Return it as a value if it's defined *)
+let rec lookup (x : id) (r : env) : value option =
 	match r with
 		| [] -> None
 		| (hd_id, hd_v) :: tl -> if x = hd_id then Some (hd_v) else lookup x tl
@@ -43,12 +44,12 @@ let rec lookup (x : id) (r : env) : const option =
 	For invalid applications (eg true + 3), fail
 	Otherwise return the result as an expression
  *)
-let doOp2 (op : op2) (e1 : exp) (e2 : exp) : exp =
-	match op, e1, e2 with
+let doOp2 (op : op2) (v1 : value) (v2 : value) : value =
+	match op, v1, v2 with
 		| LT, Const (Int x), Const (Int y) -> Const (Bool (x < y))
 		| GT, Const (Int x), Const (Int y) -> Const (Bool (x > y))
-		(* Equality takes any 2 constants, of int/bool *)
-		| Eq, Const c1, Const c2 -> Const (Bool (c1 = c2))
+		(* Equality takes any 2 values, of int/bool/closure *)
+		| Eq, _, _ -> Const (Bool (v1 = v2))
 		| Add, Const (Int x), Const (Int y) -> Const (Int (x + y))
 		| Sub, Const (Int x), Const (Int y) -> Const (Int (x - y))
 		| Mul, Const (Int x), Const (Int y) -> Const (Int (x * y))
@@ -57,10 +58,10 @@ let doOp2 (op : op2) (e1 : exp) (e2 : exp) : exp =
 		| _ -> failwith "Attempted op2 application with invalid arguments"
 
 (* TODO Long match on full language, deciding not to use optional args *)
-let rec interp (e : exp) (r : env) : exp =
+let rec interp (e : exp) (r : env) : value =
 	match e with
 		| Id x -> (match lookup x r with
-			| Some v -> Const v
+			| Some v -> v
 			| _ -> failwith "Free identifier"
 		)
 		| Const c -> Const c
@@ -72,7 +73,7 @@ let rec interp (e : exp) (r : env) : exp =
 		)
 		| Let (x, e1, e2) -> (match (interp e1 r) with
 			(* r' has the new binding at its head, preventing past bindings from taking precedence on lookup *)
-			| Const c -> interp e2 ((x, c) :: r)
+			| Const c -> interp e2 ((x, Const c) :: r)
 			| _ -> failwith "Attempted to let bind a value which was not a constant"
 		)
 		| Fun (x, e1) -> failwith "not yet implemented"
@@ -99,11 +100,11 @@ let test_interp_throws ?(r : env = []) (prog : string) : bool =
 	with _ -> true
 
 let test_interp  ?(r : env = []) (prog : string) (res : string) : bool =
-	interp (from_string prog) r = from_string res
+	interp (from_string prog) r = interp (from_string res) r
 
 (* -------ID/Let------- *)
-let%TEST "Free identifier is invalid" = test_interp_throws "x" ~r:["y", Int 3]
-let%TEST "Bound id is that id's value" = test_interp "x" "3" ~r:["x", Int 3]
+let%TEST "Free identifier is invalid" = test_interp_throws "x" ~r:["y", Const(Int 3)]
+let%TEST "Bound id is that id's value" = test_interp "x" "3" ~r:["x", Const(Int 3)]
 let%TEST "Let binding of single variable with single occurence works" =
 	test_interp "let x = 3 + 5 in x" "8"
 let%TEST "Let binding of single variable with multiple occurence works" =
