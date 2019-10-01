@@ -82,56 +82,53 @@ let rec interp (e : exp) (r : env) : exp =
 let _ = print_endline (show_exp (interp (from_file Sys.argv.(1)) [])) *)
 
 (* TODO lots of tests *)
-let test_interp_throws (e : exp) (r : env) : bool =
-	try let _ = interp e r in false
-	with _ -> true;;
+let test_interp_throws ?(r : env = []) (prog : string) : bool =
+	try let _ = interp (from_string prog) r in false
+	with _ -> true
+
+let test_interp  ?(r : env = []) (prog : string) (res : string) : bool =
+	interp (from_string prog) r = from_string res
 
 (* -------ID--------- *)
-let%TEST "Free identifier is invalid" = test_interp_throws (Id "x") ["y", Int 3]
-let%TEST "Bound id is that id's value" = interp (Id "x") ["x", Int 3] = Const (Int 3)
+let%TEST "Free identifier is invalid" = test_interp_throws "x" ~r:["y", Int 3]
+let%TEST "Bound id is that id's value" = test_interp "x" "3" ~r:["x", Int 3]
 
 (* -------Const------ *)
-let%TEST "Constant number is that number" = interp (Const (Int 0)) [] = Const (Int 0)
-let%TEST "Constant true is true" = interp (Const (Bool true)) [] = Const (Bool true)
-let%TEST "Constant false is false" = interp (Const (Bool false)) [] = Const (Bool false)
+let%TEST "Constant number is that number" = test_interp "0" "0"
+let%TEST "Constant true is true" = test_interp "true" "true"
+let%TEST "Constant false is false" = test_interp "false" "false"
 
 (* --------Op2------- *)
-let%TEST "2 number addition works" = interp (Op2 (Add, Const (Int 3), Const (Int 4))) [] = Const (Int 7)
+let%TEST "2 number addition works" = test_interp "3 + 4" "7"
+(* NOTE (kgeffen) leaving it like this to test negatives, ideally find a better way *)
 let%TEST "2 number subtraction works" = interp (Op2 (Sub, Const (Int 3), Const (Int 4))) [] = Const (Int (-1))
-let%TEST "2 number multiplication works" = interp (Op2 (Mul, Const (Int 3), Const (Int 4))) [] = Const (Int 12)
-let%TEST "2 number division works" = interp (Op2 (Div, Const (Int 12), Const (Int 4))) [] = Const (Int 3)
-let%TEST "2 number modulo works" = interp (Op2 (Mod, Const (Int 12), Const (Int 5))) [] = Const (Int 2)
-let%TEST "2 number less than works when true" = interp (Op2 (LT, Const (Int (-10)), Const (Int 0))) [] = Const (Bool true)
-let%TEST "2 number less than works when false" = interp (Op2 (LT, Const (Int 10), Const (Int 0))) [] = Const (Bool false)
-let%TEST "2 number greater than works when true" = interp (Op2 (GT, Const (Int 5), Const (Int 3))) [] = Const (Bool true)
-let%TEST "2 number greater than works when false" = interp (Op2 (GT, Const (Int (-12)), Const (Int (-2)))) [] = Const (Bool false)
-let%TEST "2 number equal works when true" = interp (Op2 (Eq, Const (Int (-7)), Const (Int (-7)))) [] = Const (Bool true)
-let%TEST "2 number equal works when false" = interp (Op2 (Eq, Const (Int (-7)), Const (Int 7))) [] = Const (Bool false)
-let%TEST "Equality for number and bool returns false" = interp (Op2 (Eq, Const (Int 1), Const (Bool true))) [] = Const (Bool false)
-let%TEST "Equality for bools works" = interp (Op2 (Eq, Const (Bool false), Const (Bool false))) [] = Const (Bool true)
+let%TEST "2 number multiplication works" = test_interp "3 * 4" "12"
+let%TEST "2 number division works" = test_interp "12 / 4" "3"
+let%TEST "2 number modulo works" = test_interp "12 % 5" "2"
+let%TEST "2 number less than works when true" = test_interp "(0 - 10) < 0" "true"
+let%TEST "2 number less than works when false" = test_interp "10 < 0" "false"
+let%TEST "2 number greater than works when true" = test_interp "5 > 3" "true"
+let%TEST "2 number greater than works when false" = test_interp "(0-12) > (0-2)" "false"
+let%TEST "2 number equal works when true" = test_interp "7 == 7" "true"
+let%TEST "2 number equal works when false" = test_interp "(0-7) == 7" "false"
+let%TEST "Equality for number and bool returns false" = test_interp "1 == true" "false"
+let%TEST "Equality for bools works" = test_interp "false == false" "true"
 
-(* 3 + 7 + 4 = 14 *)
-let%TEST "Adding 3 numbers works" =
-	interp (Op2 (Add, Op2 (Add, Const (Int 3), Const (Int 7)), Const (Int 4))) [] = Const (Int 14)
-(* (7 + 2) x 0 = 0 not 7 *)
-let%TEST "Order of operations by the structure of expression, not pemdas" =
-	interp (Op2 (Mul, Op2 (Add, Const (Int 7), Const (Int 2)), Const (Int 0))) [] = Const (Int 0)
+let%TEST "Adding 3 numbers works" = test_interp "3 + 7 + 4" "14"
+let%TEST "Order of operations by the structure of expression, not pemdas" = 
+	test_interp "(7 + 2) * 0" "0"
 
-let%TEST "Adding bools is invalid" = test_interp_throws (Op2 (Add, Const (Bool false), Const (Bool true))) []
-let%TEST "Dividing by 0 is invalid" = test_interp_throws (Op2 (Div, Const (Int 12), Const (Int 0))) []
-let%TEST "Modding by 0 is invalid" = test_interp_throws (Op2 (Mod, Const (Int 12), Const (Int 0))) []
+let%TEST "Adding bools is invalid" = test_interp_throws "true + false"
+let%TEST "Dividing by 0 is invalid" = test_interp_throws "12 / 0"
+let%TEST "Modding by 0 is invalid" = test_interp_throws "12 mod 0"
 
 
 (* ---------If----------- *)
 let%TEST "If invalid for non-bool conditional" =
-	test_interp_throws (If (Const (Int 0), Const (Int 1), Const (Int 2))) []
-let%TEST "If evaluates to first expression when true" =
-	interp (If (Const (Bool true), Const (Int 1), Const (Int 2))) [] = Const (Int 1)
-let%TEST "If evaluates to second expression when true" =
-	interp (If (Const (Bool false), Const (Int 1), Const (Int 2))) [] = Const (Int 2)
-let%TEST "If can have an more than a const in its conditional" =
-	interp (If (Op2 (GT, Const (Int (7)), Const (Int (4))),
-		Const (Int 1), Const (Int 2))) [] = Const (Int 1)
+	test_interp_throws "if 1 then 1 else 2"
+let%TEST "If evaluates to first expression when true" = test_interp "if true then 1 else 2" "1"
+let%TEST "If evaluates to second expression when true" = test_interp "if false then 1 else 2" "2"
+let%TEST "If can have an more than a const in its conditional" = test_interp "if (7 > 4) then 1 else 2" "1"
 
 (* -----Fun/Fix/App------- *)
 (* TODO not sure about this, returning a closure might be valid and convenient for our language *)
