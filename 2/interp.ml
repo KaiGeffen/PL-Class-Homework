@@ -89,9 +89,21 @@ let test_interp_throws ?(r : env = []) (prog : string) : bool =
 let test_interp  ?(r : env = []) (prog : string) (res : string) : bool =
 	interp (from_string prog) r = from_string res
 
-(* -------ID--------- *)
+(* -------ID/Let------- *)
 let%TEST "Free identifier is invalid" = test_interp_throws "x" ~r:["y", Int 3]
 let%TEST "Bound id is that id's value" = test_interp "x" "3" ~r:["x", Int 3]
+let%TEST "Let binding of single variable with single occurence works" =
+	test_interp "let x = 3 + 5 in x" "8"
+let%TEST "Let binding of single variable with multiple occurence works" =
+	test_interp "let x = 2 in x * x + x" "6"
+let%TEST "Let binding x and y to add together works" =
+	test_interp "let x = 3 in let y = 4 in x + y" "7"
+let%TEST "Let binding x twice respects the innermost occurence" =
+	test_interp "let x = 1 in let x = 2 in x" "2"
+let%TEST "Let binding x can reference itself if it's been defined in scope" =
+	test_interp "let x = 3 in let x = 2 * x in x" "6"
+let%TEST "Let x = x in x is invalid when x isn't yet bound" =
+	test_interp_throws "let x = x in x"
 
 (* -------Const------ *)
 let%TEST "Constant number is that number" = test_interp "0" "0"
@@ -121,7 +133,6 @@ let%TEST "Order of operations by the structure of expression, not pemdas" =
 let%TEST "Adding bools is invalid" = test_interp_throws "true + false"
 let%TEST "Dividing by 0 is invalid" = test_interp_throws "12 / 0"
 let%TEST "Modding by 0 is invalid" = test_interp_throws "12 mod 0"
-
 
 (* ---------If----------- *)
 let%TEST "If invalid for non-bool conditional" =
