@@ -18,13 +18,12 @@ module PTest = Ppx_test.Test
 
 open Interp_util
 
-(* TODO(kgeffen) Consider putting Env and Closure in an external file *)
 (* Env is an environment in which an expression exists
-	Which maps any number of named ids to values
+	Which maps any number of named ids to entries (Values or held expressions for Fix)
 	The current implementation can have multiple occurence of a given variable,
 	but the most recent one will take precedent
  *)
-type env = (id * value) list
+type env = (id * entry) list
 (* Values are either constants (int/bool) or closures, and are the only valid return for a program execution
 	Closure is a function, with the environment it was defined in, id for its argument, and its contents (expression)
 	Functions are first-class members, and are valid returns for a program, can be passed partially applied, etc
@@ -33,20 +32,21 @@ and value =
 (* NOTE(kgeffen) This is a little deceptive, this Const is not an expression (exp), but they look the same *)
 	| Const of const
 	| Closure of env * id * exp
-	(* TODO not valid return value for interp! Maybe put into new type and let env have either *)
+(* An entry in the environment's lookup table *)
+and entry = 
+	| Value of value
 	| HeldExp of exp
 
-(* Lookup the given identifier in the given environment. Return it as a value if it's defined *)
-let rec lookup (x : id) (r : env) : value option =
+(* Lookup the given identifier in the given environment. Return it as an entry if it's defined *)
+let rec lookup (x : id) (r : env) : entry option =
 	match r with
 		| [] -> None
 		| (hd_id, hd_v) :: tl -> if x = hd_id then Some (hd_v) else lookup x tl
 	
-(* Perform the given binary operation with the expression
+(* Perform the given binary operation with the values
 	For invalid applications (eg true + 3), fail
-	Otherwise return the result as an expression
+	Otherwise return the result as a value
  *)
- (* TODO should not check equality between heldExps *)
 let doOp2 (op : op2) (v1 : value) (v2 : value) : value =
 	match op, v1, v2 with
 		| LT, Const (Int x), Const (Int y) -> Const (Bool (x < y))
@@ -64,8 +64,8 @@ let doOp2 (op : op2) (v1 : value) (v2 : value) : value =
 let rec interp (e : exp) (r : env) : value =
 	match e with
 		| Id x -> (match lookup x r with
+			| Some (Value v) -> v
 			| Some (HeldExp e1) -> interp e1 r
-			| Some v -> v
 			| _ -> failwith "Free identifier"
 		)
 		| Const c -> Const c
@@ -76,11 +76,11 @@ let rec interp (e : exp) (r : env) : value =
 			| _ -> failwith "If called with non-bool conditional"
 		)
 		(* r' has the new binding at its head, preventing past bindings from taking precedence on lookup *)
-		| Let (x, e1, e2) -> interp e2 ((x, (interp e1 r)) :: r)
+		| Let (x, e1, e2) -> interp e2 ((x, Value (interp e1 r)) :: r)
 		| Fun (x, e1) -> Closure (r, x, e1)
 		| Fix (x, e1) -> interp e1 ((x, HeldExp e1) :: r)
 		| App (e1, e2) -> (match (interp e1 r) with
-			| Closure (rp, ip, ep) -> interp ep ((ip, (interp e2 r)) :: rp)
+			| Closure (rp, ip, ep) -> interp ep ((ip, Value (interp e2 r)) :: rp)
 			| _ -> failwith "Attempted function application on something which isn't a function"
 		)
 		| Empty -> failwith "not yet implemented"
@@ -107,8 +107,8 @@ let test_interp  ?(r : env = []) (prog : string) (res : string) : bool =
 	interp (from_string prog) r = interp (from_string res) r
 
 (* -------ID/Let------- *)
-let%TEST "Free identifier is invalid" = test_interp_throws "x" ~r:["y", Const(Int 3)]
-let%TEST "Bound id is that id's value" = test_interp "x" "3" ~r:["x", Const(Int 3)]
+let%TEST "Free identifier is invalid" = test_interp_throws "x" ~r:["y", Value(Const(Int 3))]
+let%TEST "Bound id is that id's value" = test_interp "x" "3" ~r:["x", Value(Const(Int 3))]
 let%TEST "Let binding of single variable with single occurence works" =
 	test_interp "let x = 3 + 5 in x" "8"
 let%TEST "Let binding of single variable with multiple occurence works" =
