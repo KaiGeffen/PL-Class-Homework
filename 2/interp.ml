@@ -32,6 +32,11 @@ and value =
 (* NOTE(kgeffen) This is a little deceptive, this Const is not an expression (exp), but they look the same *)
 	| Const of const
 	| Closure of env * id * exp
+(* NOTE(kgeffen) These lists aren't typed, and won't be until the type-checker is implemented
+	Therefore it is fine to have a list of true::2 for example.
+	Also intentionally, a list of lists is fine, a list of closures is also fine
+ *)
+	| List of value list
 (* An entry in the environment's lookup table *)
 and entry = 
 	| Value of value
@@ -49,10 +54,10 @@ let rec lookup (x : id) (r : env) : entry option =
  *)
 let doOp2 (op : op2) (v1 : value) (v2 : value) : value =
 	match op, v1, v2 with
+		(* Equality takes any 2 values, of int/bool/closure/list *)
+		| Eq, _, _ -> Const (Bool (v1 = v2))
 		| LT, Const (Int x), Const (Int y) -> Const (Bool (x < y))
 		| GT, Const (Int x), Const (Int y) -> Const (Bool (x > y))
-		(* Equality takes any 2 values, of int/bool/closure *)
-		| Eq, _, _ -> Const (Bool (v1 = v2))
 		| Add, Const (Int x), Const (Int y) -> Const (Int (x + y))
 		| Sub, Const (Int x), Const (Int y) -> Const (Int (x - y))
 		| Mul, Const (Int x), Const (Int y) -> Const (Int (x * y))
