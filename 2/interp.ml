@@ -88,11 +88,24 @@ let rec interp (e : exp) (r : env) : value =
 			| Closure (rp, ip, ep) -> interp ep ((ip, Value (interp e2 r)) :: rp)
 			| _ -> failwith "Attempted function application on something which isn't a function"
 		)
-		| Empty -> failwith "not yet implemented"
-		| Cons (e1, e2) -> failwith "not yet implemented"
-		| Head e -> failwith "not yet implemented"
-		| Tail e -> failwith "not yet implemented"
-		| IsEmpty e -> failwith "not yet implemented"
+		| Empty -> List []
+		| Cons (e1, e2) -> (match e2 with 
+			(* Single element list, 1::empty *)
+			| Empty -> List [interp e1 r]
+			| _ -> (match interp e2 r with
+				| List lst -> List ((interp e1 r) :: lst)
+				| _ -> failwith "Attempted to cons to something which isn't a list"
+			)
+		)
+		| Head e -> (match (interp e r) with
+			| List (hd :: tl) -> hd
+			| _ -> failwith "Attempted to get head of something which isn't a list"
+		)
+		| Tail e -> (match (interp e r) with
+			| List (hd :: tl) -> List tl
+			| _ -> failwith "Attempted to get tail of something which isn't a list"
+		)
+		| IsEmpty e -> Const (Bool ((interp e r) = List []))
 		| Record r -> failwith "not yet implemented"
 		| GetField (e, str) -> failwith "not yet implemented"
 
@@ -194,18 +207,18 @@ let%TEST "Lists can contain in scope variables" =
 let%TEST "Lists containing in-scope variables resolve those variables on creation" =
 	test_interp "let lst = (let x = 5 in (x+1)::(x*2)::empty) in let x = 0 in lst" "6::10::empty"
 
-let%TEST "Head of single int list works" = test_interp "head 1::empty" "1"
+let%TEST "Head of single int list works" = test_interp "head (1::empty)" "1"
 let%TEST "Head of single list list works" = test_interp "head (1::empty)::empty" "1::empty"
-let%TEST "Head of multi-element list works" = test_interp "head 1::2::3::4::empty" "1"
+let%TEST "Head of multi-element list works" = test_interp "head (1::2::3::4::empty)" "1"
 
 let%TEST "Tail of empty list throws" = test_interp_throws "tail empty"
-let%TEST "Tail of single element list is empty" = test_interp "tail false::empty" "empty"
-let%TEST "Tail of multi-element list is everything after head list" = test_interp "tail 1::2::3::empty" "2::3::empty"
+let%TEST "Tail of single element list is empty" = test_interp "tail (false::empty)" "empty"
+let%TEST "Tail of multi-element list is everything after head list" = test_interp "tail (1::2::3::empty)" "2::3::empty"
 
 let%TEST "is_empty true for Empty" = test_interp "is_empty empty" "true"
-let%TEST "is_empty false for single element list" = test_interp "is_empty 1::empty" "false"
+let%TEST "is_empty false for single element list" = test_interp "is_empty (1::empty)" "false"
 let%TEST "is_empty false for single element list where the element is an empty list" =
-	test_interp "is_empty (empty)::empty" "false"
+	test_interp "is_empty ((empty)::empty)" "false"
 let%TEST "is_empty false for int, bool, & closure" =
 	test_interp "is_empty 1" "false" && test_interp "is_empty true" "false" && test_interp "is_empty (fun x -> 3*x)" "false"
 
