@@ -98,7 +98,9 @@ let rec interp (e : exp) (r : env) : value =
 (* let _ = print_endline (show_exp (from_file Sys.argv.(1)))
 let _ = print_endline (show_exp (interp (from_file Sys.argv.(1)) [])) *)
 
-(* TODO lots of tests *)
+
+
+(* TESTS *)
 let test_interp_throws ?(r : env = []) (prog : string) : bool =
 	try let _ = interp (from_string prog) r in false
 	with _ -> true
@@ -162,8 +164,6 @@ let%TEST "If can have an more than a const in its conditional" = test_interp "if
 
 (* -----Fun/Fix/App------- *)
 let%TEST "Functions are valid return values" = not (test_interp_throws "fun x -> x")
-(* TODO clarify what is valid return value *)
-(* let%TEST "Fix function is a valid return value" = not (test_interp_throws "fix x -> x") *)
 let%TEST "Applying identity function works" = test_interp "(fun x -> x) 3" "3"
 let%TEST "Functions can be passed as variables and applied" =
 	test_interp "let foo = fun x -> 2*x in foo 3" "6"
@@ -175,16 +175,34 @@ let%TEST "Fix works when no recursion occurs" = test_interp "fix x -> if false t
 let%TEST "Fix recursive implementation of factorial works" =
 	test_interp "let y = 5 in fix x -> (if y == 0 then 1 else (y * (let y = y-1 in x)))" "120"
 
-(* TODO not sure about this, returning a closure might be valid and convenient for our language *)
-(* let%TEST "Function definition alone is not a program" = test_interp_throws (Fun ("x", (Id "x"))) []
-let%TEST "Fix definition alone is not a program" = test_interp_throws (Fix ("x", (Id "x"))) []
- *)
+(* --------Lists--------- *)
+let%TEST "Empty list is a value" = not (test_interp_throws "empty")
+let%TEST "Single int list is a value" = not (test_interp_throws "1::empty")
+let%TEST "Single bool list is a value" = not (test_interp_throws "false::empty")
+let%TEST "Single closure list is a value" = not (test_interp_throws "(fun x -> 3*x)::empty")
+let%TEST "Single list list is a value" = not (test_interp_throws "(1::empty)::empty")
+(* NOTE(kgeffen) Mixed type lists are currently valid, but aren't intentional, so aren't tested for *)
+let%TEST "List containing operations performs those operations" =
+	test_interp "(1+2)::(3*4)::empty" "3::12::empty"
+let%TEST "Lists can contain in scope variables" =
+	test_interp "let x = 5 in (x+1)::(x*2)::empty" "6::10::empty"
+let%TEST "Lists containing in-scope variables resolve those variables on creation" =
+	test_interp "let lst = (let x = 5 in (x+1)::(x*2)::empty) in let x = 0 in lst" "6::10::empty"
 
-(* --------Empty--------- *)
-(* let%TEST "Empty is an invalid return value" = test_interp_throws Empty [] idk if this is true TODO *)
+let%TEST "Head of single int list works" = test_interp "head 1::empty" "1"
+let%TEST "Head of single list list works" = test_interp "head (1::empty)::empty" "1::empty"
+let%TEST "Head of multi-element list works" = test_interp "head 1::2::3::4::empty" "1"
 
+let%TEST "Tail of empty list throws" = test_interp_throws "tail empty"
+let%TEST "Tail of single element list is empty" = test_interp "tail false::empty" "empty"
+let%TEST "Tail of multi-element list is everything after head list" = test_interp "tail 1::2::3::empty" "2::3::empty"
 
-(* TODO(kgeffen) Write out tests for all value returns (Fix) that should be invalid in language, ensure they fail *)
+let%TEST "is_empty true for Empty" = test_interp "is_empty empty" "true"
+let%TEST "is_empty false for single element list" = test_interp "is_empty 1::empty" "false"
+let%TEST "is_empty false for single element list where the element is an empty list" =
+	test_interp "is_empty (empty)::empty" "false"
+let%TEST "is_empty false for int, bool, & closure" =
+	test_interp "is_empty 1" "false" && test_interp "is_empty true" "false" && test_interp "is_empty (fun x -> 3*x)" "false"
 
 
 (* Runs all tests declared with let%TEST. This must be the last line
