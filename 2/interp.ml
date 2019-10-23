@@ -71,7 +71,7 @@ let rec interp (e : exp) (r : env) : value =
 		| Id x -> (match lookup x r with
 			| Some (Value v) -> v
 			| Some (HeldExp e1) -> interp e1 r
-			| _ -> failwith "Free identifier"
+			| None -> failwith "Free identifier"
 		)
 		| Const c -> Const c
 		| Op2 (op, e1, e2) -> doOp2 op (interp e1 r) (interp e2 r)
