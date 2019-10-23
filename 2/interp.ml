@@ -222,7 +222,19 @@ let%TEST "is_empty false for single element list where the element is an empty l
 let%TEST "is_empty false for int, bool, & closure" =
 	test_interp "is_empty 1" "false" && test_interp "is_empty true" "false" && test_interp "is_empty (fun x -> 3*x)" "false"
 
+(* ------Records------- *)
+let%TEST "Records can contain all simple int, bool, closure, lists, empty lists" =
+	not (test_interp_throws "{x1 : 1, x2 : true, x3 : (fun x -> 3*x), x4 : 1::2::empty, x5 : empty}")
+let%TEST "All simple values can be gotten as fields from records" =
+	test_interp "{x1 : 1, x2 : true, x3 : (fun x -> 3*x), x4 : 1::2::empty, x5 : empty}.x1" "1" &&
+	test_interp "{x1 : 1, x2 : true, x3 : (fun x -> 3*x), x4 : 1::2::empty, x5 : empty}.x2" "true" &&
+	test_interp "{x1 : 1, x2 : true, x3 : (fun x -> 3*x), x4 : 1::2::empty, x5 : empty}.x3" "(fun x -> 3*x)" &&
+	test_interp "{x1 : 1, x2 : true, x3 : (fun x -> 3*x), x4 : 1::2::empty, x5 : empty}.x4" "1::2::empty" &&
+	test_interp "{x1 : 1, x2 : true, x3 : (fun x -> 3*x), x4 : 1::2::empty, x5 : empty}.x5" "empty"
+let%TEST "Records containing unbound variables throw" =
+	test_interp_throws "let rec = {x1 : y} in let y = 3 in rec.x1"
+let%TEST "Records with fields named the same as in-scope variables can still be gotten" =
+	test_interp "let rec = {x : 4} in let x = 3 in rec.x" "4"
 
-(* Runs all tests declared with let%TEST. This must be the last line
-   in the file. *)
+(* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
