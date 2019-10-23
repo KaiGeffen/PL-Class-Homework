@@ -11,6 +11,7 @@
 	alt g is goto line
 	So far this language is immutable, eg it uses rho but not sigma from the lecture 4
 	The language now includes closures (See 5.1 in lecture 4) but not addr/stores/hash-tables
+	In interp_util, I think Record should be (id * exp) list instead of (string * exp) list
 *)
 
 (* This is necessary for let%TEST to work. *)
@@ -37,6 +38,7 @@ and value =
 	Also intentionally, a list of lists is fine, a list of closures is also fine
  *)
 	| List of value list
+	| Record of (id * value) list
 (* An entry in the environment's lookup table *)
 and entry = 
 	| Value of value
@@ -54,7 +56,6 @@ let rec lookup (x : id) (r : env) : entry option =
  *)
 let doOp2 (op : op2) (v1 : value) (v2 : value) : value =
 	match op, v1, v2 with
-		(* Equality takes any 2 values, of int/bool/closure/list *)
 		| Eq, _, _ -> Const (Bool (v1 = v2))
 		| LT, Const (Int x), Const (Int y) -> Const (Bool (x < y))
 		| GT, Const (Int x), Const (Int y) -> Const (Bool (x > y))
