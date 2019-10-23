@@ -44,9 +44,9 @@ and entry =
 	| Value of value
 	| HeldExp of exp
 
-(* Lookup the given identifier in the given environment. Return it as an entry if it's defined *)
-let rec lookup (x : id) (r : env) : entry option =
-	match r with
+(* Lookup the given id in the given list *)
+let rec lookup (x : id) (lst : (id * 'a) list) : 'a option =
+	match lst with
 		| [] -> None
 		| (hd_id, hd_v) :: tl -> if x = hd_id then Some (hd_v) else lookup x tl
 	
@@ -66,7 +66,6 @@ let doOp2 (op : op2) (v1 : value) (v2 : value) : value =
 		| Mod, Const (Int x), Const (Int y) -> Const (Int (x mod y))
 		| _ -> failwith "Attempted op2 application with invalid arguments"
 
-(* TODO Long match on full language, deciding not to use optional args *)
 let rec interp (e : exp) (r : env) : value =
 	match e with
 		| Id x -> (match lookup x r with
@@ -107,8 +106,20 @@ let rec interp (e : exp) (r : env) : value =
 			| _ -> failwith "Attempted to get tail of something which isn't a list"
 		)
 		| IsEmpty e -> Const (Bool ((interp e r) = List []))
-		| Record r -> failwith "not yet implemented"
-		| GetField (e, str) -> failwith "not yet implemented"
+		(* NOTE(kgeffen) The entries in record are interpreted to values when declared. Not lazy *)
+		| Record d -> Record (interp_fields d r)
+		| GetField (e, x) -> (match interp e r with
+			| Record d -> (match lookup x d with
+				| Some v -> v
+				| None -> failwith "Attempted to get a field which a record not contained in the given record"
+			)  
+			| _ -> failwith "Attempted to get field of something which isn't a record"
+		)
+(* Interpret each field in a given record list *)
+and interp_fields (d : (id * exp) list) (r : env) : (id * value) list =
+	match d with
+		| [] -> []
+		| (hd_id, hd_exp) :: tl -> (hd_id, interp hd_exp r) :: interp_fields tl r
 
 (* Read the input in the format ./interp.d.byte program
 	Where program is a filepath to a program in our grammar
