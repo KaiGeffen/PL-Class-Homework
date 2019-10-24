@@ -97,21 +97,21 @@ let rec interp (e : exp) (r : env) : value =
 				| _ -> failwith "Attempted to cons to something which isn't a list"
 			)
 		)
-		| Head e -> (match (interp e r) with
+		| Head e1 -> (match (interp e1 r) with
 			| List (hd :: tl) -> hd
 			| _ -> failwith "Attempted to get head of something which isn't a list"
 		)
-		| Tail e -> (match (interp e r) with
+		| Tail e1 -> (match (interp e1 r) with
 			| List (hd :: tl) -> List tl
 			| _ -> failwith "Attempted to get tail of something which isn't a list"
 		)
-		| IsEmpty e -> Const (Bool ((interp e r) = List []))
+		| IsEmpty e1 -> Const (Bool ((interp e1 r) = List []))
 		(* NOTE(kgeffen) The entries in record are interpreted to values when declared. Not lazy *)
 		| Record d -> Record (interp_fields d r)
-		| GetField (e, x) -> (match interp e r with
+		| GetField (e1, x) -> (match interp e1 r with
 			| Record d -> (match lookup x d with
 				| Some v -> v
-				| None -> failwith "Attempted to get a field which a record not contained in the given record"
+				| None -> failwith "Attempted to get a field not contained in the given record"
 			)  
 			| _ -> failwith "Attempted to get field of something which isn't a record"
 		)
