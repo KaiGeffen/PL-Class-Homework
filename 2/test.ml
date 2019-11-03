@@ -4,6 +4,7 @@ module PTest = Ppx_test.Test
 open Interp
 open Interp_util
 
+(* Helper methods for testing *)
 let test_interp_throws ?(r : env = []) (prog : string) : bool =
   try let _ = interp (from_string prog) r in false
   with _ -> true
@@ -64,6 +65,10 @@ let%TEST "If invalid for non-bool conditional" =
 let%TEST "If evaluates to first expression when true" = test_interp "if true then 1 else 2" "1"
 let%TEST "If evaluates to second expression when true" = test_interp "if false then 1 else 2" "2"
 let%TEST "If can have an more than a const in its conditional" = test_interp "if (7 > 4) then 1 else 2" "1"
+let%TEST "If allows errors in the expression it doesn't run" =
+  not (test_interp_throws "if false then err else 2")
+let%TEST "If - Variables in scope don't affect outside the if statement" =
+  test_interp "let x = 3 in let y = (if x == 3 then (let x = 0 in 1) else err) in x * y" "3"
 
 (* -----Fun/Fix/App------- *)
 let%TEST "Functions are valid return values" = not (test_interp_throws "fun x -> x")
