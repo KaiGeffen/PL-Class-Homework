@@ -5,7 +5,7 @@
   To build and run, compile and run main.ml:
   ocamlbuild -use-ocamlfind -pkg compsci631 main.d.byte; ./main.d.byte fileNameHere
   To test:
-  ocamlbuild -use-ocamlfind -pkg compsci631 -pkg ppx_test test.d.byte; ./test.d.byte
+  ocamlbuild -use-ocamlfind -pkg compsci631 -pkg ppx_test interp_tests.d.byte; ./interp_tests.d.byte
   So far this language is immutable, eg it uses rho but not sigma from the lecture 4
   The language now includes closures (See 5.1 in lecture 4) but not addr/stores/hash-tables
   In interp_util, I think Record should be (id * exp) list instead of (string * exp) list
