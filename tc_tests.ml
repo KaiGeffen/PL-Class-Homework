@@ -64,5 +64,22 @@ let%TEST "If condition scope does not carry to the expressions" =
 let%TEST "If results can contain operations" =
   test_tc "if true then (1 + 2) else (3 * 4)" TInt
 
+(* ---------Fun----------- *)
+let%TEST "Function from bool to int works"
+  = test_tc "fun (x : bool) -> 3" (TFun (TBool, TInt))
+let%TEST "Function containing its argument correctly types that argument"
+  = test_tc "fun (x : bool) -> x" (TFun(TBool, TBool))
+let%TEST "Function with invalid contents is invalid"
+  = test_tc_throws "fun (x : bool) -> y"
+let%TEST "Function argument can be a function"
+  = test_tc "fun (x : (int -> int)) -> true" (TFun(TFun(TInt, TInt), TBool))
+let%TEST "Function contents can be a non-trivial expression"
+  = test_tc "fun (x : bool) -> if x then 3 else 5" (TFun(TBool, TInt))
+
+
+
+
+
+
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
