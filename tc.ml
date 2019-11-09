@@ -9,8 +9,8 @@ type typeEnv = (id * typ) list
 (* g is the type environment in which the program is considered, stands for Gamma *)
 let rec tc (e : exp) (g : typeEnv) : typ =
   match e with 
-    | Const Bool c -> TBool
-    | Const Int c -> TInt
+    | Const Bool _ -> TBool
+    | Const Int _ -> TInt
     | Id x -> failwith "not implemented"
     | Op2 (op, e1, e2) -> failwith "not implemented"
     | If (e1, e2, e3) -> failwith "not implemented"
