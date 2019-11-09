@@ -6,7 +6,7 @@ open Tc_util
 
 (* Helper methods for testing *)
 let test_tc  ?(g : typeEnv = []) (prog : string) (t : typ) : bool =
-  t == tc (from_string prog) g
+  t = tc (from_string prog) g
 
 let test_tc_throws ?(g : typeEnv = []) (prog : string) : bool =
   try let _ = tc (from_string prog) g in false

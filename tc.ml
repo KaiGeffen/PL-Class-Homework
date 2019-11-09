@@ -35,6 +35,7 @@ let rec tc (e : exp) (g : typeEnv) : typ =
       | TBool, t1 -> if (tc e3 g) = t1 then t1 else failwith "The 2 paths in an if have different types"
       | _ -> failwith "If condition was not a bool"
     )
-    | Fun (x, t, e1) -> failwith "not implemented"
+    (* t -> (tc e1 g') *)
+    | Fun (x, t, e1) -> TFun (t, (tc e1 ((x, t) :: g)))
     | App (e1, e2) -> failwith "not implemented"
     | _ -> failwith "not implemented"
