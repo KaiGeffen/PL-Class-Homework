@@ -29,5 +29,22 @@ let%TEST "Var bound to defined var has that vars type" =
 let%TEST "Var bound to undefined var is invalid" =
   test_tc_throws "let x = y in let y = 3 in x"
 
+(* ----------Op2--------- *)
+(* TODO(kgeffen) Test LT once the parser bug is fixed
+  https://github.com/plasma-umass/compsci631/issues/19  
+*)
+let%TEST "Algebraic operations with 2 numbers yield Int" =
+  test_tc "1 + 2" TInt && test_tc "2 - 4" TInt && 
+  test_tc "1 * 2" TInt && test_tc "2 / 4" TInt && 
+  test_tc "1 % 2" TInt
+let%TEST "Less/greater than with 2 numbers yield bool" =
+  (* test_tc "0 < 0" TBool  &&  *)test_tc "3 > 0" TBool
+let%TEST "Algebraic operations with a non-numbers is invalid" =
+  test_tc_throws "1 + true" && test_tc_throws "false % 4"
+let%TEST "Less/greater than with non-numbers is invalid" =
+  (* test_tc_throws "true < false" &&  *)test_tc_throws "3 > true"
+let%TEST "Equality testing ints/bools yields bool" =
+  test_tc "3 == 4" TBool && test_tc "false == 5" TBool && test_tc "false == false" TBool
+
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
