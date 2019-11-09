@@ -75,6 +75,10 @@ let%TEST "Function argument can be a function"
   = test_tc "fun (x : (int -> int)) -> true" (TFun(TFun(TInt, TInt), TBool))
 let%TEST "Function contents can be a non-trivial expression"
   = test_tc "fun (x : bool) -> if x then 3 else 5" (TFun(TBool, TInt))
+let%TEST "Function arg type overrules that variables type inside the function" =
+  test_tc "let x = 3 in fun (x : bool) -> true" (TFun(TBool, TBool))
+let%TEST "Function arg type is not in scope outside of the function" =
+  test_tc "let x = 3 in let _ = fun (x : bool) -> true in x" TInt
 
 
 
