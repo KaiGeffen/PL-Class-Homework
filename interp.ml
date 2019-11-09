@@ -11,6 +11,7 @@
   In interp_util, I think Record should be (id * exp) list instead of (string * exp) list
 *)
 open Interp_util
+open Util
 
 (* Env is an environment in which an expression exists
   Which maps any number of named ids to entries (Values or held expressions for Fix)
@@ -37,12 +38,6 @@ and value =
 and entry = 
   | Value of value
   | HeldExp of exp
-
-(* Lookup the given id in the given list *)
-let rec lookup (x : id) (lst : (id * 'a) list) : 'a option =
-  match lst with
-    | [] -> None
-    | (hd_id, hd_v) :: tl -> if x = hd_id then Some (hd_v) else lookup x tl
   
 (* Perform the given binary operation with the values
   For invalid applications (eg true + 3), fail
