@@ -31,7 +31,10 @@ let rec tc (e : exp) (g : typeEnv) : typ =
     )
     | Let (x, e1, e2) -> tc e2 ((x, tc e1 g) :: g)
     | Op2 (op, e1, e2) -> delta op (tc e1 g) (tc e2 g)
-    | If (e1, e2, e3) -> failwith "not implemented"
+    | If (e1, e2, e3) -> (match (tc e1 g), (tc e2 g) with
+      | TBool, t1 -> if (tc e3 g) = t1 then t1 else failwith "The 2 paths in an if have different types"
+      | _ -> failwith "If condition was not a bool"
+    )
     | Fun (x, t, e1) -> failwith "not implemented"
     | App (e1, e2) -> failwith "not implemented"
     | _ -> failwith "not implemented"
