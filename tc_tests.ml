@@ -46,5 +46,23 @@ let%TEST "Less/greater than with non-numbers is invalid" =
 let%TEST "Equality testing ints/bools yields bool" =
   test_tc "3 == 4" TBool && test_tc "false == 5" TBool && test_tc "false == false" TBool
 
+(* ---------If------------ *)
+let%TEST "If can return 2 ints or 2 bools" =
+  test_tc "if true then 1 else 2" TInt && test_tc "if true then false else false" TBool
+let%TEST "If is invalid when its return types are not the same" =
+  test_tc_throws "if true then 1 else false"
+let%TEST "If is invalid when its return types variables of different types" =
+  test_tc_throws "let x = 1 in let y = true in if true then x else y"
+let%TEST "If results can contain operations" =
+  test_tc "if true then (1 + 2) else (3 * 4)" TInt
+let%TEST "If condition can contain operations" =
+  test_tc "if (3 == 3) then 1 else 2" TInt
+let%TEST "If is invalid when it has an undefined variable" =
+  test_tc_throws "if true then 3 else x"
+let%TEST "If condition scope does not carry to the expressions" =
+  test_tc_throws "if (let x = 4 in true) then 3 else x"
+let%TEST "If results can contain operations" =
+  test_tc "if true then (1 + 2) else (3 * 4)" TInt
+
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
