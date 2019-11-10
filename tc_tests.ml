@@ -64,7 +64,7 @@ let%TEST "If condition scope does not carry to the expressions" =
 let%TEST "If results can contain operations" =
   test_tc "if true then (1 + 2) else (3 * 4)" TInt
 
-(* ---------Fun----------- *)
+(* ----------Fun---------- *)
 let%TEST "Function from bool to int works"
   = test_tc "fun (x : bool) -> 3" (TFun (TBool, TInt))
 let%TEST "Function containing its argument correctly types that argument"
@@ -79,7 +79,8 @@ let%TEST "Function arg type overrules that variables type inside the function" =
   test_tc "let x = 3 in fun (x : bool) -> true" (TFun(TBool, TBool))
 let%TEST "Function arg type is not in scope outside of the function" =
   test_tc "let x = 3 in let _ = fun (x : bool) -> true in x" TInt
-
+let%TEST "Function of multiple arguments has correct type" =
+  test_tc "fun (x : int) -> (fun (y : int) -> (x + y))" (TFun(TInt, TFun(TInt, TInt)))
 
 
 
