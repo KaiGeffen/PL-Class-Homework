@@ -82,9 +82,21 @@ let%TEST "Function arg type is not in scope outside of the function" =
 let%TEST "Function of multiple arguments has correct type" =
   test_tc "fun (x : int) -> (fun (y : int) -> (x + y))" (TFun(TInt, TFun(TInt, TInt)))
 
-
-
-
+(* ---------App------------ *)
+let%TEST "App of basic function works when given right arg type" =
+  test_tc "(fun (x : bool) -> 3) true" TInt
+let%TEST "App of basic function is invalid when given incorrect arg type" =
+  test_tc_throws "(fun (x : bool) -> 3) 7"
+let%TEST "App works for functions expecting function type arg" =
+  test_tc "(fun (f : int -> int) -> f 7) (fun (x : int) -> 1 + x)" TInt
+let%TEST "App for function expecting function type arg throws when given wrong arg type" =
+  test_tc_throws "(fun (f : int -> int) -> f 7) 8"
+let%TEST "App for function of multiple args returns curried function type if only 1 arg applied" =
+  test_tc "(fun (x :int) -> (fun (y : int) -> x + y)) 4" (TFun(TInt, TInt))
+let%TEST "App for function of multiple args returns the final type when all args applied" =
+  test_tc "(fun (x :int) -> (fun (y : int) -> x + y)) 4 5" TInt
+let%TEST "App can have a bound variable as the applied argument" =
+  test_tc "let x = 3 in (fun (x : int) -> 1 + x) x" TInt
 
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
