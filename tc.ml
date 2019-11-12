@@ -21,6 +21,7 @@ let delta (op : op2) (t1 : typ) (t2 : typ) : typ =
 
 (* Returns the type of the given program, or fails if the given program is not type-correct *)
 (* g is the type environment in which the program is considered, stands for Gamma *)
+(* TODO order these cases, consistent with interp and other files *)
 let rec tc (e : exp) (g : typeEnv) : typ =
   match e with 
     | Const Bool _ -> TBool
@@ -42,4 +43,6 @@ let rec tc (e : exp) (g : typeEnv) : typ =
       | _ -> failwith "Tried to apply to something other than a function"
     )
     | Fix (x, t, e1) -> if tc e1 ((x, t) :: g) = t then t else failwith "Fix type did not match the type given"
+    | Empty t -> TList t
+    | IsEmpty e -> TBool
     | _ -> failwith "not implemented"
