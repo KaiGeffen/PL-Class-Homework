@@ -123,7 +123,8 @@ let%TEST "is_empty is bool when given a list" =
   test_tc "is_empty empty<int>" TBool
 let%TEST "is_empty is bool when given any expression" =
   test_tc "is_empty (if true then 3 else 4)" TBool
-
+let%TEST "is_empty is bool even when the expression is invalid" =
+  test_tc "is_empty x" TBool
 
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
