@@ -41,4 +41,5 @@ let rec tc (e : exp) (g : typeEnv) : typ =
       | TFun (t1, t2) -> if (tc e2 g) = t1 then t2 else failwith "The wrong type of argument was applied to a function"
       | _ -> failwith "Tried to apply to something other than a function"
     )
+    | Fix (x, t, e1) -> if tc e1 ((x, t) :: g) = t then t else failwith "Fix type did not match the type given"
     | _ -> failwith "not implemented"
