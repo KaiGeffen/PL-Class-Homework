@@ -98,5 +98,21 @@ let%TEST "App for function of multiple args returns the final type when all args
 let%TEST "App can have a bound variable as the applied argument" =
   test_tc "let x = 3 in (fun (x : int) -> 1 + x) x" TInt
 
+(* ----------Fix----------- *)
+let%TEST "Fix with basic int works" =
+  test_tc "fix (x : int) -> 3" TInt
+let%TEST "Fix fails when the signature is a bool but the return is int" =
+  test_tc_throws "fix (x : bool) -> 5"
+let%TEST "Fix implementing factorial is int" =
+  test_tc "let y = 5 in fix (x : int) -> (if y == 0 then 1 else (y * (let y = y-1 in x)))" TInt
+let%TEST "Fix arg overrules that variables type inside the fix" =
+  test_tc "let x = true in fix (x : int) -> x" TInt
+let%TEST "Fix arg is not in scope outside the function" =
+  test_tc_throws "if (fix (x : bool) -> true) then x else x"
+let%TEST "Fix arg can be a function" =
+  test_tc "fix (x : int -> bool) -> fun (x : int) -> if x > 0 then true else false" (TFun(TInt, TBool))
+let%TEST "Fix can be non-terminating and still be correctly type-checked" =
+  test_tc "fix (x : int) -> x" TInt
+
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
