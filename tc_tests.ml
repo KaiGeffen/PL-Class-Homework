@@ -114,5 +114,16 @@ let%TEST "Fix arg can be a function" =
 let%TEST "Fix can be non-terminating and still be correctly type-checked" =
   test_tc "fix (x : int) -> x" TInt
 
+(* --------Empty/is_empty------- *)
+let%TEST "Empty int list is an int list" =
+  test_tc "empty<int>" (TList TInt)
+let%TEST "Empty list can be a type containing lists and functions" =
+  test_tc "empty<(int list) -> bool>" (TList (TFun((TList TInt), TBool)))
+let%TEST "is_empty is bool when given a list" =
+  test_tc "is_empty empty<int>" TBool
+let%TEST "is_empty is bool when given any expression" =
+  test_tc "is_empty (if true then 3 else 4)" TBool
+
+
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
