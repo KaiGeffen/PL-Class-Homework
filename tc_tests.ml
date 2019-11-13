@@ -164,5 +164,31 @@ let%TEST "Head of function list is that function's type" =
 let%TEST "Tail of function list is that list of that function's type" =
   test_tc "tail ((fun (x : int) -> true) :: (fun (y : int) -> y == 4))" (TList (TFun (TInt, TBool)))
 
+(* ----------Array------------- *)
+let%TEST "Array full of true is bool array" =
+  test_tc "array (3, true)" (TArr TBool)
+let%TEST "Array with non-int length is invalid" =
+  test_tc_throws "let x = (3 :: 4) in array (x, true)"
+let%TEST "Array declaration can contain bound variables" =
+  test_tc "let x = (3 :: 4) in array (3, x)" (TArr (TList TInt))
+let%TEST "Array of functions works" =
+  test_tc "let f = (fun (x : int) -> 3 * x) in array (3, f)" (TArr (TFun (TInt, TInt)))
+
+let%TEST "GetArray returns type within the given array for simple array" =
+  test_tc "array (3, true)[0]" TBool
+let%TEST "GetArray invalid when a non-int is given for the index" =
+  test_tc_throws "array (3, true)[true]"
+let%TEST "GetArray returns type within the given array for an array of lists" =
+  test_tc "let l = (2::3::4) in array (3, l)[0]" (TList TInt)
+
+let%TEST "SetArray returns int when setting to an int array" =
+  test_tc "array (3, 3)[1] = 0" TInt
+let%TEST "SetArray is invalid when the index is not an int" =
+  test_tc_throws "array (3, 3)[true] = 0"
+let%TEST "SetArray is invalid when the value it attempts to set is of a different type than the array" =
+  test_tc_throws "array (3, 3)[1] = true"
+let%TEST "SetArray works even when the index is outside of range" =
+  test_tc "array (3, 3)[100] = 0" TInt
+
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
