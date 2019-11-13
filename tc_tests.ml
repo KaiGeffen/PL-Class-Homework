@@ -147,6 +147,8 @@ let%TEST "List of same-type lists works" =
   test_tc "let l1 = 1 :: 3 in let l2 = 4 :: 4 in l1 :: l2" (TList (TList TInt))
 let%TEST "List of differently typed lists is invalid" =
   test_tc_throws "let l1 = true :: true in let l2 = 4 :: 4 in l1 :: l2"
+let%TEST "List expressions which define variables are not in scope outside of that element" =
+  test_tc_throws "(let x = 3 in x) :: x" && test_tc_throws "x :: (let x = 3 in x)"
 
 (* ---------Head/tail---------- *)
 let%TEST "Head of single int list is int" =
