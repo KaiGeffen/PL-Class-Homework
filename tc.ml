@@ -59,4 +59,22 @@ let rec tc (e : exp) (g : typeEnv) : typ =
       | TList t -> TList t
       | _ -> failwith "Tried to get tail of something which isn't a list"
     )
+    | MkArray (e1, e2) -> (match tc e1 g with
+      | TInt -> TArr (tc e2 g)
+      | _ -> failwith "Array length must be an int"
+    )
+    | GetArray (e1, e2) -> (match tc e2 g with
+      | TInt -> (match tc e1 g with
+        | TArr t -> t
+        | _ -> failwith "GetArray called on something which isn't an array"
+      )
+      | _ -> failwith "GetArray index must be an int"
+    )
+    | SetArray (e1, e2, e3) -> (match tc e2 g with
+      | TInt -> (match tc e1 g with
+        | TArr t -> if tc e3 g = t then t else failwith "Attempted to set an array element to a type which that array isn't"
+        | _ -> failwith "SetArray called on something which isn't an array"
+      )
+      | _ -> failwith "SetArray index must be an int"
+    )
     | _ -> failwith "not implemented"
