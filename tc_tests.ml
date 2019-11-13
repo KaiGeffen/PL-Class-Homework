@@ -125,6 +125,28 @@ let%TEST "is_empty is bool when given any expression" =
   test_tc "is_empty (if true then 3 else 4)" TBool
 let%TEST "is_empty is bool even when the expression is invalid" =
   test_tc "is_empty x" TBool
+let%TEST "is_empty is bool when given a non-empty list" =
+  test_tc "is_empty (1 :: 3)" TBool
+
+(* --------List---------------- *)
+let%TEST "List with single int is an int list" =
+  test_tc "1 :: empty<int>" (TList TInt)
+let%TEST "List with single int followed by empty boolean is invalid" =
+  test_tc_throws "1 :: empty<bool>"
+let%TEST "List of mixed basic types is invalid" =
+  test_tc_throws "1 :: true"
+let%TEST "List with multiple ints is int list" =
+  test_tc "1 :: 2 :: 3 :: 4" (TList TInt)
+let%TEST "List of bound variables is typed same as those variables" =
+  test_tc "let x = 3 in let y = 1 in x :: y" (TList TInt)
+let%TEST "List of same-type functions works" =
+  test_tc "let f = fun (x : int) -> x in let g = fun (x : int) -> 2 + x in f :: g" (TList (TFun(TInt, TInt)))
+let%TEST "List of differently typed functions is invalid" =
+  test_tc_throws "let f = fun (x : bool) -> x in let g = fun (x : int) -> 2 + x in f :: f :: g"
+let%TEST "List of same-type lists works" =
+  test_tc "let l1 = 1 :: 3 in let l2 = 4 :: 4 in l1 :: l2" (TList (TList TInt))
+let%TEST "List of differently typed lists is invalid" =
+  test_tc_throws "let l1 = true :: true in let l2 = 4 :: 4 in l1 :: l2"
 
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
