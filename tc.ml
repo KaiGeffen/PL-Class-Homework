@@ -45,4 +45,10 @@ let rec tc (e : exp) (g : typeEnv) : typ =
     | Fix (x, t, e1) -> if tc e1 ((x, t) :: g) = t then t else failwith "Fix type did not match the type given"
     | Empty t -> TList t
     | IsEmpty e -> TBool
+    | Cons (e1, e2) -> (
+      let (t1, t2) = (tc e1 g, tc e2 g) in
+      (* If either it's 2 elements of the same type, or an element followed by a list of its type *)
+      if t1 = t2 || TList t1 = t2 then TList t1
+      else failwith "The elements of a list must be homogenous"
+    )
     | _ -> failwith "not implemented"

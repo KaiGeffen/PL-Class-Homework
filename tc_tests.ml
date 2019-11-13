@@ -149,6 +149,8 @@ let%TEST "List of differently typed lists is invalid" =
   test_tc_throws "let l1 = true :: true in let l2 = 4 :: 4 in l1 :: l2"
 let%TEST "List expressions which define variables are not in scope outside of that element" =
   test_tc_throws "(let x = 3 in x) :: x" && test_tc_throws "x :: (let x = 3 in x)"
+let%TEST "List of an int followed by an int list is valid" =
+  test_tc "let l = 2 :: 3 in 1 :: l" (TList TInt)
 
 (* ---------Head/tail---------- *)
 let%TEST "Head of single int list is int" =
