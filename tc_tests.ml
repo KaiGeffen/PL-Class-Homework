@@ -156,13 +156,13 @@ let%TEST "List of int plus int list list is invalid" =
 
 (* ---------Head/tail---------- *)
 let%TEST "Head of single int list is int" =
-  test_tc "head 3 :: empty<int>" TInt
+  test_tc "head (3 :: empty<int>)" TInt
 let%TEST "Tail of single int list is int list (Even though the program is invalid)" =
-  test_tc "tail 3 :: empty<int>" (TList TInt)
+  test_tc "tail (3 :: empty<int>)" (TList TInt)
 let%TEST "Head of function list is that function's type" =
-  test_tc "head (fun (x : int) -> true) :: empty<int -> bool>" (TFun (TInt, TBool))
+  test_tc "head ((fun (x : int) -> true) :: empty<int -> bool>)" (TFun (TInt, TBool))
 let%TEST "Tail of function list is that list of that function's type" =
-  test_tc "tail (fun (x : int) -> true) :: (fun (y : int) -> y == 4)" (TList (TFun (TInt, TBool)))
+  test_tc "tail ((fun (x : int) -> true) :: (fun (y : int) -> y == 4))" (TList (TFun (TInt, TBool)))
 
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()

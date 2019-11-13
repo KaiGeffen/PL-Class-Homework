@@ -51,4 +51,12 @@ let rec tc (e : exp) (g : typeEnv) : typ =
       if t1 = t2 || TList t1 = t2 then TList t1
       else failwith "The elements of a list must be homogenous"
     )
+    | Head e1 -> (match tc e1 g with
+      | TList t -> t
+      | _ -> failwith "Tried to get head of something which isn't a list"
+    )
+    | Tail e1 -> (match tc e1 g with
+      | TList t -> TList t
+      | _ -> failwith "Tried to get tail of something which isn't a list"
+    )
     | _ -> failwith "not implemented"
