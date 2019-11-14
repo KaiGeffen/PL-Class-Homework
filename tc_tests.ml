@@ -190,5 +190,15 @@ let%TEST "SetArray is invalid when the value it attempts to set is of a differen
 let%TEST "SetArray works even when the index is outside of range" =
   test_tc "array (3, 3)[100] = 0" TInt
 
+(* ----Type Function/Application---- *)
+let%TEST "Type function of basic expression works" =
+  test_tc "tfun a . 3" (TForall ("a", TInt))
+let%TEST "Type function of an empty alpha list works" =
+  test_tc "tfun a . empty<a>" (TForall ("a", (TList (TId("a")))))
+let%TEST "Type function of a function from alpha to int works" =
+  test_tc "tfun a . (fun (x : a) -> 3)" (TForall ("a", (TFun (TId("a"), TInt))))
+let%TEST "Type function id can be have the same name as an in-scope variable and neither overrides the other" =
+  test_tc "tfun a . (let a = true in fun (x : a) -> a)" (TForall ("a", (TFun (TId("a"), TBool))))
+
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
