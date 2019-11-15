@@ -81,5 +81,5 @@ let rec tc (e : exp) (g : env) (d : typEnv) : typ =
       )
       | _ -> failwith "SetArray index must be an int"
     )
-    (* | TypFun (a, e) ->  *)
+    | TypFun (a, e1) -> TForall (a, tc e1 g (a :: d))
     | _ -> failwith "not implemented"
