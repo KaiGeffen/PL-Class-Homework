@@ -220,9 +220,12 @@ let%TEST "Type application to something besides a type function is invalid" =
   test_tc_throws "(3)<bool>"
 let%TEST "Type application containing an unbound id is invalid" =
   test_tc_throws "(tfun a . 3 )<a>" && test_tc_throws "(tfun a . 3 )<b>"
+let%TEST "Type application containing an in-scope type-id is valid" =
+  test_tc "tfun a . (tfun b . empty<b>)<a>" (TForall ("a", (TList (TId("a")))))
 
 let%TEST "Generic function applied without type application is invalid" =
   test_tc_throws "let genEq = tfun a . (fun (x : a) -> fun (y : a) -> a == b) in genEq 3"
+
 (* TODO test for using the same id twice in succession *)
 (* TODO Full length function *)
 (* let%TEST "Generic function length works" =
