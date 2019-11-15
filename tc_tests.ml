@@ -5,11 +5,11 @@ open Tc
 open Tc_util
 
 (* Helper methods for testing *)
-let test_tc  ?(g : typeEnv = []) (prog : string) (t : typ) : bool =
-  t = tc (from_string prog) g
+let test_tc  ?(g : env = []) (prog : string) (t : typ) : bool =
+  t = tc (from_string prog) g []
 
-let test_tc_throws ?(g : typeEnv = []) (prog : string) : bool =
-  try let _ = tc (from_string prog) g in false
+let test_tc_throws ?(g : env = []) (prog : string) : bool =
+  try let _ = tc (from_string prog) g [] in false
   with _ -> true
 
 (* -------Constants------- *)
