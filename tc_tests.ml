@@ -199,6 +199,35 @@ let%TEST "Type function of a function from alpha to int works" =
   test_tc "tfun a . (fun (x : a) -> 3)" (TForall ("a", (TFun (TId("a"), TInt))))
 let%TEST "Type function id can be have the same name as an in-scope variable and neither overrides the other" =
   test_tc "tfun a . (let a = true in fun (x : a) -> a)" (TForall ("a", (TFun (TId("a"), TBool))))
+let%TEST "Type function can have multiple types as arguments" =
+  test_tc "tfun a . (tfun b . (empty<a -> b>))" (TForall ("a", TForall ("b", TList (TFun (TId("a"), TId("b"))))))
+let%TEST "A function can have 2 generic arguments with the same id" =
+  test_tc "tfun a . (fun (x : a) -> fun (y : a) -> x == y)" (TForall ("a", (TFun (TId("a"), TFun (TId("a"), TBool)))))
+(* Not sure about this one *)
+let%TEST "If 2 separate type ids must be the same to avoid a type error, the program is invalid" =
+  test_tc_throws "tfun b . tfun a . (empty<a> :: empty<b>)"
+  (* test_tc "tfun b . (tfun a . (fun (x : a) -> fun (y : b) -> x == y))" (TForall ("a", (TFun (TId("a"), TFun (TId("a"), TBool))))) *)
+
+let%TEST "Type application for basic expression works" =
+  test_tc "(tfun a . 3 )<bool>" TInt
+let%TEST "Type application for alpha list becomes the applied type list" =
+  test_tc "(tfun a . empty<a>)<bool>" (TList TBool)
+let%TEST "Type application on a function containing alpha works" =
+  test_tc "(tfun a . (fun (x : a) -> 3))<bool>" (TFun (TBool, TInt))
+let%TEST "Type application when a variable shares alpha's name works" =
+  test_tc "(tfun a . (let a = 3 in a))<bool>" TInt
+let%TEST "Type application to something besides a type function is invalid" =
+  test_tc_throws "(3)<bool>"
+let%TEST "Type application containing an unbound id is invalid" =
+  test_tc_throws "(tfun a . 3 )<a>" && test_tc_throws "(tfun a . 3 )<b>"
+
+let%TEST "Generic function applied without type application is invalid" =
+  test_tc_throws "let genEq = tfun a . (fun (x : a) -> fun (y : a) -> a == b) in genEq 3"
+(* TODO test for using the same id twice in succession *)
+(* TODO Full length function *)
+(* let%TEST "Generic function length works" =
+  test_tc "let length "
+ *)
 
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
