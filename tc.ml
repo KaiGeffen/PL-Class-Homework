@@ -1,5 +1,6 @@
 (* Base on the third homework from Arjun Guha's (UMass) Fall 2018 CS631 'Programming-Languages' class *)
 (* https://people.cs.umass.edu/~arjun/courses/compsci631-fall2018/hw/tc.pdf *)
+(* TODO consistent naming/comment conventions, see ocaml style guide *)
 open Tc_util
 open Util
 
@@ -21,6 +22,37 @@ let checkOp (op : op2) (t1 : typ) (t2 : typ) : typ =
       | TInt, TInt -> TBool
       | _ -> failwith "Attempted to less or greater than with non-integers"
     )
+
+let rec d_ok (t : typ) (d : typEnv) : bool =
+  match t with 
+    | TBool | TInt -> true
+    | TFun (t1, t2) -> (d_ok t1 d) && (d_ok t2 d)
+    | TRecord ((x1, t1) :: rst) -> (d_ok t1 d) && (d_ok (TRecord rst) d)
+    | TRecord [] -> true
+    | TList t1 -> d_ok t1 d
+    | TArr t1 -> d_ok t1 d
+    (* TODO think about if this is right for the language - it's a choice *)
+    | TForall (x, t1) -> d_ok t1 (x :: d)
+    | TId (x) -> contains x d
+    | TMetavar (x) -> failwith "TODO what are metavars?"
+
+(* TODO describe / test *)
+let rec subst_id (t_body : typ) (a : tid) (t_sub : typ) : typ =
+  match t_body with
+    | TBool | TInt -> t_body
+    | TFun (t1, t2) -> TFun (subst_id t1 a t_sub, subst_id t2 a t_sub)
+    | TRecord r -> TRecord (subst_record r a t_sub)
+    | TList t1 -> subst_id t1 a t_sub
+    | TArr t1 -> subst_id t1 a t_sub
+    (* TODO how does this interact with naming overlap *)
+    | TForall (b, t1) -> if a = b then t_body else TForall (b, subst_id t1 a t_sub)
+    | TId (b) -> if a = b then t_sub else TMetavar (b)
+    | TMetavar (b) -> failwith "TODO what are metavars?"
+(* Substitute a with t_sub in each entry in r *)
+and subst_record (r : (string * typ) list) (a : tid) (t_sub : typ) : (string * typ) list =
+  match r with
+    | (hd_x, hd_t) :: rst -> (hd_x, subst_id hd_t a t_sub) :: (subst_record rst a t_sub)
+    | [] -> []
 
 (* Returns the type of the given program, or fails if the given program is not type-correct *)
 (* g (Gamma) : environment, maps bound variables to their types *)
@@ -82,4 +114,9 @@ let rec tc (e : exp) (g : env) (d : typEnv) : typ =
       | _ -> failwith "SetArray index must be an int"
     )
     | TypFun (a, e1) -> TForall (a, tc e1 g (a :: d))
+    | TypApp (e1, t1) -> (match tc e1 g d with
+      | TForall (a, t_body) -> if d_ok t1 d then subst_id t_body a t1 else
+        failwith "Type application attempted with a type which has free variables"
+      | _ -> failwith "Attempted type application to something besides a type abstraction"
+    )
     | _ -> failwith "not implemented"
