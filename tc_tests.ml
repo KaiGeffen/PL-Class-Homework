@@ -221,7 +221,7 @@ let%TEST "Type application to something besides a type function is invalid" =
 let%TEST "Type application containing an unbound id is invalid" =
   test_tc_throws "(tfun a . 3 )<a>" && test_tc_throws "(tfun a . 3 )<b>"
 let%TEST "Type application containing an in-scope type-id is valid" =
-  test_tc "(tfun a . (tfun b . empty<a>))<int>" (TForall ("b", (TList (TInt))))
+  test_tc "(tfun a . (tfun b . empty<a>))<int>" (TForall ("b", (TList TInt)))
 
 let%TEST "Generic function applied without type application is invalid" =
   test_tc_throws "let genEq = tfun a . (fun (x : a) -> fun (y : a) -> a == b) in genEq 3"

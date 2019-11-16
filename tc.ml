@@ -37,16 +37,17 @@ let rec d_ok (t : typ) (d : typEnv) : bool =
     | TMetavar (x) -> failwith "TODO what are metavars?"
 
 (* TODO describe / test *)
+(* Substitute all occurences of alpha with t_sub, in the given body *)
 let rec subst_id (t_body : typ) (a : tid) (t_sub : typ) : typ =
   match t_body with
     | TBool | TInt -> t_body
     | TFun (t1, t2) -> TFun (subst_id t1 a t_sub, subst_id t2 a t_sub)
     | TRecord r -> TRecord (subst_record r a t_sub)
-    | TList t1 -> subst_id t1 a t_sub
-    | TArr t1 -> subst_id t1 a t_sub
+    | TList t1 -> TList (subst_id t1 a t_sub)
+    | TArr t1 -> TArr (subst_id t1 a t_sub)
     (* TODO how does this interact with naming overlap *)
     | TForall (b, t1) -> if a = b then t_body else TForall (b, subst_id t1 a t_sub)
-    | TId (b) -> if a = b then t_sub else TMetavar (b)
+    | TId (b) -> if a = b then t_sub else TId (b)
     | TMetavar (b) -> failwith "TODO what are metavars?"
 (* Substitute a with t_sub in each entry in r *)
 and subst_record (r : (string * typ) list) (a : tid) (t_sub : typ) : (string * typ) list =
