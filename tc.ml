@@ -114,10 +114,22 @@ let rec tc (e : exp) (g : env) (d : typEnv) : typ =
       )
       | _ -> failwith "SetArray index must be an int"
     )
+    | Record r -> TRecord (tc_record r g d)
+    | GetField (e1, x) -> (match tc e1 g d with
+      | TRecord r -> (match lookup x r with
+        | Some t -> t
+        | None -> failwith "Record does not contain the given field"
+      )
+      | _ -> failwith "Tried to get field of something besides a record"
+    )
     | TypFun (a, e1) -> TForall (a, tc e1 g (a :: d))
     | TypApp (e1, t1) -> (match tc e1 g d with
       | TForall (a, t_body) -> if d_ok t1 d then subst_id t_body a t1 else
         failwith "Type application attempted with a type which has free variables"
       | _ -> failwith "Attempted type application to something besides a type abstraction"
     )
-    | _ -> failwith "not implemented"
+(* Type check each expression in the given record contents, return TRecord contents *)
+and tc_record (r : (string * exp) list) (g : env) (d : typEnv) : (string * typ) list =
+  match r with
+    | (hd_x, hd_e) :: rst -> (hd_x, tc hd_e g d) :: tc_record rst g d
+    | [] -> []
