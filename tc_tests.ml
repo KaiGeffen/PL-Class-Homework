@@ -190,6 +190,23 @@ let%TEST "SetArray is invalid when the value it attempts to set is of a differen
 let%TEST "SetArray works even when the index is outside of range" =
   test_tc "array (3, 3)[100] = 0" TInt
 
+(* -----------Record------------- *)
+let%TEST "Empty record has record type" = test_tc "{}" (TRecord[])
+let%TEST "Single element record is typed correctly" = test_tc "{x: 3}" (TRecord[("x", TInt)])
+let%TEST "Multi-element record is typed correctly" =
+  test_tc "{x: 3, y: true, z: empty<int>}" (TRecord[("x", TInt);("y", TBool);("z", TList TInt)])
+let%TEST "Records can't have duplicate fields" =
+  test_tc_throws "{x: 3, x: 4}"
+
+let%TEST "Record lookup works for single element record" =
+  test_tc "{x: true}.x" TBool
+let%TEST "Record lookup invalid when the named field is missing" =
+  test_tc_throws "{x: 3}.y"
+let%TEST "Record lookup works in multi-element record" =
+  test_tc "{x: true, y: false, z: (2 + 2)}.z" TInt
+let%TEST "Record lookup field name can be a bound variable, and doesn't affect that variable" =
+  test_tc "let x = 3 in {x: true}.x" TBool && test_tc "let x = 3 in let _ = {x: true}.x in x" TInt
+
 (* ----Type Function/Application---- *)
 let%TEST "Type function of basic expression works" =
   test_tc "tfun a . 3" (TForall ("a", TInt))
@@ -225,6 +242,11 @@ let%TEST "Type application containing an in-scope type-id is valid" =
 
 let%TEST "Generic function applied without type application is invalid" =
   test_tc_throws "let genEq = tfun a . (fun (x : a) -> fun (y : a) -> a == b) in genEq 3"
+
+(* TODO Exhaustive tests for type substitution *)
+
+(* TODO Exhaustive tests for delta ok *)
+
 
 (* TODO test for using the same id twice in succession *)
 (* TODO Full length function *)
