@@ -133,3 +133,7 @@ and tc_record (r : (string * exp) list) (g : env) (d : typEnv) : (string * typ) 
   match r with
     | (hd_x, hd_e) :: rst -> (hd_x, tc hd_e g d) :: tc_record rst g d
     | [] -> []
+
+(* Returns the type of the given program, or fails if the given program is not type-correct *)
+let get_type (e : exp) : typ =
+  tc e [] []
