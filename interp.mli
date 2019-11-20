@@ -1,5 +1,5 @@
 (* The basic interpreter for our functional language *)
-open Interp_util
+open Tc_util
 
 type env = (id * entry) list
 and value = 

@@ -10,7 +10,7 @@
   The language now includes closures (See 5.1 in lecture 4) but not addr/stores/hash-tables
   In interp_util, I think Record should be (id * exp) list instead of (string * exp) list
 *)
-open Interp_util
+open Tc_util
 open Util
 
 (* Env is an environment in which an expression exists
@@ -71,16 +71,20 @@ let rec interp (e : exp) (r : env) : value =
     )
     (* r' has the new binding at its head, preventing past bindings from taking precedence on lookup *)
     | Let (x, e1, e2) -> interp e2 ((x, Value (interp e1 r)) :: r)
-    | Fun (x, e1) -> Closure (r, x, e1)
-    | Fix (x, e1) -> interp e1 ((x, HeldExp e1) :: r)
+    (* TODO implement/test *)
+    | Fun (x, todo, e1) -> Closure (r, x, e1)
+    (* TODO implement/test *)
+    | Fix (x, todo, e1) -> interp e1 ((x, HeldExp e1) :: r)
     | App (e1, e2) -> (match (interp e1 r) with
       | Closure (rp, ip, ep) -> interp ep ((ip, Value (interp e2 r)) :: rp)
       | _ -> failwith "Attempted function application on something which isn't a function"
     )
-    | Empty -> List []
+    (* TODO implement/test *)
+    | Empty todo -> List []
     | Cons (e1, e2) -> (match e2 with 
       (* Single element list, 1::empty *)
-      | Empty -> List [interp e1 r]
+      (* TODO implement/test *)
+      | Empty todo -> List [interp e1 r]
       | _ -> (match interp e2 r with
         | List lst -> List ((interp e1 r) :: lst)
         | _ -> failwith "Attempted to cons to something which isn't a list"
