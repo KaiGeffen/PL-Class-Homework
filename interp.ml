@@ -33,6 +33,7 @@ and value =
  *)
   | List of value list
   | Record of (id * value) list
+  | Array of value array
   [@@deriving show]
 (* An entry in the environment's lookup table *)
 and entry = 
@@ -54,6 +55,8 @@ let doOp2 (op : op2) (v1 : value) (v2 : value) : value =
     | Div, Const (Int x), Const (Int y) -> Const (Int (x / y))
     | Mod, Const (Int x), Const (Int y) -> Const (Int (x mod y))
     | _ -> failwith "Attempted op2 application with invalid arguments"
+
+
 
 let rec interp (e : exp) (r : env) : value =
   match e with
@@ -107,6 +110,11 @@ let rec interp (e : exp) (r : env) : value =
         | None -> failwith "Attempted to get a field not contained in the given record"
       )  
       | _ -> failwith "Attempted to get field of something which isn't a record"
+    )
+    | MkArray (e1, e2) -> (match interp e1 r with
+      (* TODO fix formatting *)
+      | Const (Int n) -> if n >= 0 then Array (Array.make n (interp e2 r)) else failwith "Length of array must be nonnegative"
+      | _ -> failwith "Length of array must be an integer"
     )
     | _ -> failwith "TODO not implemented"
 (* Interpret each field in a given record list *)
