@@ -70,6 +70,7 @@ let%TEST "If allows errors in the expression it doesn't run" =
 let%TEST "If - Variables in scope don't affect outside the if statement" =
   test_interp "let x = 3 in let y = (if x == 3 then (let x = 0 in 1) else err) in x * y" "3"
 
+(* TODO update to include types *)
 (* -----Fun/Fix/App------- *)
 let%TEST "Functions are valid return values" = not (test_interp_throws "fun x -> x")
 let%TEST "Applying identity function works" = test_interp "(fun x -> x) 3" "3"
@@ -83,6 +84,7 @@ let%TEST "Fix works when no recursion occurs" = test_interp "fix x -> if false t
 let%TEST "Fix recursive implementation of factorial works" =
   test_interp "let y = 5 in fix x -> (if y == 0 then 1 else (y * (let y = y-1 in x)))" "120"
 
+(* TODO update to include types *)
 (* --------Lists--------- *)
 let%TEST "Empty list is a value" = not (test_interp_throws "empty")
 let%TEST "Single int list is a value" = not (test_interp_throws "1::empty")
@@ -112,6 +114,7 @@ let%TEST "is_empty false for single element list where the element is an empty l
 let%TEST "is_empty false for int, bool, & closure" =
   test_interp "is_empty 1" "false" && test_interp "is_empty true" "false" && test_interp "is_empty (fun x -> 3*x)" "false"
 
+(* TODO update to include types *)
 (* ------Records------- *)
 let%TEST "Records can contain all simple int, bool, closure, lists, empty lists" =
   not (test_interp_throws "{x1 : 1, x2 : true, x3 : (fun x -> 3*x), x4 : 1::2::empty, x5 : empty}")
@@ -125,6 +128,10 @@ let%TEST "Records containing unbound variables throw" =
   test_interp_throws "let rec = {x1 : y} in let y = 3 in rec.x1"
 let%TEST "Records with fields named the same as in-scope variables can still be gotten" =
   test_interp "let rec = {x : 4} in let x = 3 in rec.x" "4"
+
+(* TODO Arrays *)
+
+(* TODO Type functions/application *)
 
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()

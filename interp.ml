@@ -104,6 +104,7 @@ let rec interp (e : exp) (r : env) : value =
       )  
       | _ -> failwith "Attempted to get field of something which isn't a record"
     )
+    | _ -> failwith "TODO not implemented"
 (* Interpret each field in a given record list *)
 and interp_fields (d : (id * exp) list) (r : env) : (id * value) list =
   match d with
