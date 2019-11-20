@@ -127,7 +127,40 @@ let%TEST "Records containing unbound variables throw" =
 let%TEST "Records with fields named the same as in-scope variables can still be gotten" =
   test_interp "let rec = {x : 4} in let x = 3 in rec.x" "4"
 
-(* TODO Arrays *)
+(* --------Arrays-------- *)
+let%TEST "Array with negative length is invalid" =
+  test_interp_throws "array (0 - 1, 5)"
+let%TEST "Array of length zero is valid" =
+  not (test_interp_throws "array (0, 5)")
+let%TEST "Array length must be an int" =
+  test_interp_throws "array (true, 5)"
+let%TEST "Array of length 1 has given value at first index" =
+  test_interp "array (1, 5)[0]" "5"
+let%TEST "Multi-element array has initial value at last and middle indices" =
+  test_interp "array (5, 7)[2]" "7" && test_interp "array (5, 7)[4]" "7"
+let%TEST "Getting an element outside the bounds of the array is invalid" =
+  test_interp_throws "array (5, true)[5]"
+let%TEST "Getting an index which isn't an int is invalid" =
+  test_interp_throws "array (5, true)[false]"
+
+let%TEST "Setting the first index of an array changes that index" =
+  test_interp "(array (1, true)[0] = false)[0]" "false"
+let%TEST "Setting an index outside the bounds of the array is invalid" =
+  test_interp_throws "array (1, true)[1] = false"
+let%TEST "Setting an index of an array doesn't affect that array's other elements" =
+  test_interp "(array (5, 17)[3] = 5)[1]" "17"
+let%TEST "Setting an element in an array won't affect other instances of that array" =
+  test_interp "let a1 = array(10, 1) in let a2 = (a1[3] = 2) in a1[3]" "1"
+let%TEST "Arrays can contain in-scope variables" =
+  test_interp "let x = 5 in array (10, x)[3]" "5"
+
+let%TEST "Arrays elements can be ints, bools, functions, records, lists, arrays" =
+  test_interp "array (10, 1)[0]" "1" &&
+  test_interp "array (10, true)[0]" "true" &&
+  test_interp "array (10, (fun (x : int) -> 2*x))[0]" "fun (x : int) -> 2*x" &&
+  test_interp "array (10, {x1 : 1, x2 : 2})[0]" "{x1 : 1, x2 : 2}" &&
+  test_interp "array (10, 1::2::3::empty<int>)[0]" "1::2::3::empty<int>" &&
+  test_interp "array (10, array(5, 0))[0]" "array(5, 0)"
 
 (* TODO Type functions/application *)
 
