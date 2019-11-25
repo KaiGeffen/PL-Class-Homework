@@ -126,6 +126,7 @@ let%TEST "Records containing unbound variables throw" =
   test_interp_throws "let rec = {x1 : y} in let y = 3 in rec.x1"
 let%TEST "Records with fields named the same as in-scope variables can still be gotten" =
   test_interp "let rec = {x : 4} in let x = 3 in rec.x" "4"
+let%TEST "Records can't have duplicate fields" = test_interp_throws "{x: 3, x: 4}"
 
 (* --------Arrays-------- *)
 (* 

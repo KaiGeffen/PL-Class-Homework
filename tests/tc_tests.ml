@@ -195,9 +195,6 @@ let%TEST "Empty record has record type" = test_tc "{}" (TRecord[])
 let%TEST "Single element record is typed correctly" = test_tc "{x: 3}" (TRecord[("x", TInt)])
 let%TEST "Multi-element record is typed correctly" =
   test_tc "{x: 3, y: true, z: empty<int>}" (TRecord[("x", TInt);("y", TBool);("z", TList TInt)])
-(* TODO Decide what happens in case of duplicate fields. *)
-(* Doesn't seem responsibility of tc to fail, maybe interp? *)
-(* let%TEST "Records can't have duplicate fields" = test_tc_throws "{x: 3, x: 4}" *)
 
 let%TEST "Record lookup works for single element record" =
   test_tc "{x: true}.x" TBool
