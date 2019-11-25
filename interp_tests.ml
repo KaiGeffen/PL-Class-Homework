@@ -84,6 +84,9 @@ let%TEST "Fix works when no recursion occurs" = test_interp "fix (x : bool) -> i
 let%TEST "Fix recursive implementation of factorial works" =
   test_interp "let y = 5 in fix (x : int) -> (if y == 0 then 1 else (y * (let y = y-1 in x)))" "120"
 
+let%TEST "Identity function for ints does not equal identity function for bools" =
+  not (test_interp "fun (x : int) -> x" "fun (x : bool) -> x")
+
 (* --------Lists--------- *)
 let%TEST "Empty list is a value" = not (test_interp_throws "empty<int>")
 let%TEST "Single int list is a value" = not (test_interp_throws "1::empty<int>")

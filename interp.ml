@@ -26,7 +26,7 @@ type env = (id * entry) list
 and value = 
 (* NOTE(kgeffen) This is a little deceptive, this Const is not an expression (exp), but they look the same *)
   | Const of const
-  | Closure of env * id * exp
+  | Closure of env * id * typ * exp
 (* NOTE(kgeffen) These lists aren't typed, and won't be until the type-checker is implemented
   Therefore it is fine to have a list of true::2 for example.
   Also intentionally, a list of lists is fine, a list of closures is also fine
@@ -74,12 +74,11 @@ let rec interp (e : exp) (r : env) : value =
     )
     (* r' has the new binding at its head, preventing past bindings from taking precedence on lookup *)
     | Let (x, e1, e2) -> interp e2 ((x, Value (interp e1 r)) :: r)
-    (* TODO implement/test *)
-    | Fun (x, todo, e1) -> Closure (r, x, e1)
+    | Fun (x, t, e1) -> Closure (r, x, t, e1)
     (* TODO implement/test *)
     | Fix (x, todo, e1) -> interp e1 ((x, HeldExp e1) :: r)
     | App (e1, e2) -> (match (interp e1 r) with
-      | Closure (rp, ip, ep) -> interp ep ((ip, Value (interp e2 r)) :: rp)
+      | Closure (rp, ip, _, ep) -> interp ep ((ip, Value (interp e2 r)) :: rp)
       | _ -> failwith "Attempted function application on something which isn't a function"
     )
     (* TODO implement/test *)
@@ -123,13 +122,13 @@ let rec interp (e : exp) (r : env) : value =
       )
       | _ -> failwith "GetArray must be given an integer"
     )
-    | SetArray (e1, e2, e3) -> (match interp e1 r with
+(*    | SetArray (e1, e2, e3) -> (match interp e1 r with
       | Array a -> (match interp e2 r with
         | Const (Int n) -> a.(n) <- (interp e3 r) (* TODO what return what effect? *)
         | _ -> failwith "SetArray index must be an integer"
       )
       | _ -> failwith "SetArray index must be an intger"
-    )
+    ) *)
     | _ -> failwith "TODO not implemented"
 (* Interpret each field in a given record list *)
 and interp_fields (d : (id * exp) list) (r : env) : (id * value) list =
