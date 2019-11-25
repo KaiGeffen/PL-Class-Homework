@@ -171,6 +171,3 @@ let%TEST "Type application inteprets to its exp's value" =
   test_interp "(tfun x . true)<int>" "true"
 let%TEST "Type function variable names don't override existing variables" =
   test_interp "let x = 3 in tfun x . x" "3"
-
-(* Runs all tests declared with let%TEST. This must be the last line in the file. *)
-let _ = Ppx_test.Test.collect ()

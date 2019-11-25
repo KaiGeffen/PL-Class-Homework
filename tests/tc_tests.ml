@@ -254,6 +254,3 @@ let%TEST "Generic function applied without type application is invalid" =
 (* let%TEST "Generic function length works" =
   test_tc "let length "
  *)
-
-(* Runs all tests declared with let%TEST. This must be the last line in the file. *)
-let _ = Ppx_test.Test.collect ()
