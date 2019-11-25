@@ -11,6 +11,7 @@ type env = (id * typ) list
 type typEnv = id list
 
 (* Determine the resulting type of the given operations and arguments, or fail if invalid *)
+(* TODO rename, this is not just checking but determining the return type of an operation. *)
 let checkOp (op : op2) (t1 : typ) (t2 : typ) : typ =
   match op with
     | Eq -> TBool
@@ -38,6 +39,7 @@ let rec d_ok (t : typ) (d : typEnv) : bool =
 
 (* TODO describe / test *)
 (* Substitute all occurences of alpha with t_sub, in the given body *)
+(* There's a term for what this is doing, use that term as the function name. *)
 let rec subst_id (t_body : typ) (a : tid) (t_sub : typ) : typ =
   match t_body with
     | TBool | TInt -> t_body
