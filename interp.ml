@@ -80,12 +80,10 @@ let rec interp (e : exp) (r : env) : value =
       | Closure (rp, ip, ep) -> interp ep ((ip, Value (interp e2 r)) :: rp)
       | _ -> failwith "Attempted function application on something which isn't a function"
     )
-    (* TODO implement/test *)
-    | Empty todo -> List []
+    | Empty _ -> List []
     | Cons (e1, e2) -> (match e2 with 
       (* Single element list, 1::empty *)
-      (* TODO implement/test *)
-      | Empty todo -> List [interp e1 r]
+      | Empty _ -> List [interp e1 r]
       | _ -> (match interp e2 r with
         | List lst -> List ((interp e1 r) :: lst)
         | _ -> failwith "Attempted to cons to something which isn't a list"
