@@ -136,7 +136,8 @@ let rec interp (e : exp) (r : env) : value =
       | _ -> failwith "SetArray index must be an intger"
     )
   *)
-    | _ -> failwith "TODO not implemented"
+    | TypFun (alpha, e1) -> interp e1 r
+    | TypApp (e1, t) -> interp e1 r
 (* Interpret each field in a given record list *)
 and interp_fields (d : (id * exp) list) (r : env) : (id * value) list =
   match d with
