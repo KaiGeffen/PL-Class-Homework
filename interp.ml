@@ -109,9 +109,15 @@ let rec interp (e : exp) (r : env) : value =
       )  
       | _ -> failwith "Attempted to get field of something which isn't a record"
     )
+    (* NOTE Arrays aren't support because they are mutable. They are included just for type-checker *)
+    | MkArray (_, _) | GetArray (_, _) | SetArray (_, _, _) -> failwith "Intepreter does not support arrays"
+    (*
     | MkArray (e1, e2) -> (match interp e1 r with
-      (* TODO fix formatting *)
-      | Const (Int n) -> if n >= 0 then Array (Array.make n (interp e2 r)) else failwith "Length of array must be nonnegative"
+      | Const (Int n) ->
+        if n >= 0 then
+          Array (Array.make n (interp e2 r))
+        else
+          failwith "Length of array must be nonnegative"
       | _ -> failwith "Length of array must be an integer"
     )
     | GetArray (e1, e2) -> (match interp e1 r with
@@ -123,11 +129,13 @@ let rec interp (e : exp) (r : env) : value =
     )
     | SetArray (e1, e2, e3) -> (match interp e1 r with
       | Array a -> (match interp e2 r with
-        | Const (Int n) -> a.(n) <- (interp e3 r) (* TODO what return what effect? *)
+        | Const (Int n) -> a.(n) <- (interp e3 r);; (* Return void, value, array??? *)
+
         | _ -> failwith "SetArray index must be an integer"
       )
       | _ -> failwith "SetArray index must be an intger"
     )
+  *)
     | _ -> failwith "TODO not implemented"
 (* Interpret each field in a given record list *)
 and interp_fields (d : (id * exp) list) (r : env) : (id * value) list =

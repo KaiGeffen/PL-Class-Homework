@@ -128,6 +128,7 @@ let%TEST "Records with fields named the same as in-scope variables can still be 
   test_interp "let rec = {x : 4} in let x = 3 in rec.x" "4"
 
 (* --------Arrays-------- *)
+(* 
 let%TEST "Array with negative length is invalid" =
   test_interp_throws "array (0 - 1, 5)"
 let%TEST "Array of length zero is valid" =
@@ -161,7 +162,7 @@ let%TEST "Arrays elements can be ints, bools, functions, records, lists, arrays"
   test_interp "array (10, {x1 : 1, x2 : 2})[0]" "{x1 : 1, x2 : 2}" &&
   test_interp "array (10, 1::2::3::empty<int>)[0]" "1::2::3::empty<int>" &&
   test_interp "array (10, array(5, 0))[0]" "array(5, 0)"
-
+ *)
 (* TODO Type functions/application *)
 
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
