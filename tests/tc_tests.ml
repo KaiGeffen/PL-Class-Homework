@@ -247,7 +247,19 @@ let%TEST "Generic function applied without type application is invalid" =
 
 
 (* TODO test for using the same id twice in succession *)
-(* TODO Full length function *)
-(* let%TEST "Generic function length works" =
-  test_tc "let length "
- *)
+
+(* ---------Cohesive--------- *)
+let%TEST "Generic length function can be fully applied" =
+  test_tc
+    "let length = (tfun a .
+      (fix (self : a list -> int) ->
+        fun (lst : a list) ->
+          if is_empty (lst) then
+            0
+          else
+            (1 + self (tail lst))
+      )
+    ) in
+    let my_list = (3 :: 4 :: 5 :: empty<int>) in
+    length<int> my_list"
+    TInt

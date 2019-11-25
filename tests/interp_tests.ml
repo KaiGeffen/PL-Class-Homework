@@ -172,3 +172,19 @@ let%TEST "Type application inteprets to its exp's value" =
   test_interp "(tfun x . true)<int>" "true"
 let%TEST "Type function variable names don't override existing variables" =
   test_interp "let x = 3 in tfun x . x" "3"
+
+(* ---------Cohesive--------- *)
+let%TEST "Generic length function can be fully applied" =
+  test_interp
+    "let length = (tfun a .
+      (fix (self : a list -> int) ->
+        fun (lst : a list) ->
+          if is_empty (lst) then
+            0
+          else
+            (1 + self (tail lst))
+      )
+    ) in
+    let my_list = (3 :: 4 :: 5 :: empty<int>) in
+    length<int> my_list"
+    "3"
