@@ -4,7 +4,7 @@ open Tc_util
 type env = (id * entry) list
 and value = 
   | Const of const
-  | Closure of env * id * typ * exp
+  | Closure of env * id * exp
   | List of value list
   | Record of (id * value) list
   | Array of value array
