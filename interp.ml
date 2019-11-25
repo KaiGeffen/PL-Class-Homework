@@ -74,8 +74,7 @@ let rec interp (e : exp) (r : env) : value =
     )
     (* r' has the new binding at its head, preventing past bindings from taking precedence on lookup *)
     | Let (x, e1, e2) -> interp e2 ((x, Value (interp e1 r)) :: r)
-    (* TODO implement/test *)
-    | Fun (x, todo, e1) -> Closure (r, x, e1)
+    | Fun (x, _, e1) -> Closure (r, x, e1)
     | Fix (x, _, e1) -> interp e1 ((x, HeldExp e1) :: r)
     | App (e1, e2) -> (match (interp e1 r) with
       | Closure (rp, ip, ep) -> interp ep ((ip, Value (interp e2 r)) :: rp)
