@@ -163,7 +163,14 @@ let%TEST "Arrays elements can be ints, bools, functions, records, lists, arrays"
   test_interp "array (10, 1::2::3::empty<int>)[0]" "1::2::3::empty<int>" &&
   test_interp "array (10, array(5, 0))[0]" "array(5, 0)"
  *)
-(* TODO Type functions/application *)
+
+(* --Type Functions/Application---- *)
+let%TEST "Type functions interpret to their exp's value" =
+  test_interp "tfun x . 3" "3"
+let%TEST "Type application inteprets to its exp's value" =
+  test_interp "(tfun x . true)<int>" "true"
+let%TEST "Type function variable names don't override existing variables" =
+  test_interp "let x = 3 in tfun x . x" "3"
 
 (* Runs all tests declared with let%TEST. This must be the last line in the file. *)
 let _ = Ppx_test.Test.collect ()
