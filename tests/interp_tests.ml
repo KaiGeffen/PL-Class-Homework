@@ -5,16 +5,14 @@ open Interp
 open Tc_util
 
 (* Helper methods for testing *)
-let test_interp_throws ?(r : env = []) (prog : string) : bool =
-  try let _ = interp (from_string prog) r in false
+let test_interp_throws (prog : string) : bool =
+  try let _ = interp (from_string prog) [] in false
   with _ -> true
 
-let test_interp  ?(r : env = []) (prog : string) (res : string) : bool =
-  interp (from_string prog) r = interp (from_string res) r
+let test_interp (prog : string) (res : string) : bool =
+  interp (from_string prog) [] = interp (from_string res) []
 
 (* -------ID/Let------- *)
-let%TEST "Free identifier is invalid" = test_interp_throws "x" ~r:["y", Value(Const(Int 3))]
-let%TEST "Bound id is that id's value" = test_interp "x" "3" ~r:["x", Value(Const(Int 3))]
 let%TEST "Let binding of single variable with single occurence works" =
   test_interp "let x = 3 + 5 in x" "8"
 let%TEST "Let binding of single variable with multiple occurence works" =
