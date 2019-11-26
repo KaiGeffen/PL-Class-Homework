@@ -13,7 +13,7 @@ type typ_env = id list
 (* Return the type of the result of the operation, or fail if invalid *)
 let get_return_type (op : op2) (t1 : typ) (t2 : typ) : typ =
   match op with
-    | Eq -> TBool
+    | Eq -> if t1 = t2 then TBool else failwith "Attempted to check equality of values with different types"
     | Add | Sub | Mul | Div | Mod -> (match t1, t2 with
       | TInt, TInt -> TInt
       | _ -> failwith "Attempted algebraic operation with non-integers"

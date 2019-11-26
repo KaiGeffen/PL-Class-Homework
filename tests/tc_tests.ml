@@ -43,8 +43,10 @@ let%TEST "Algebraic operations with a non-numbers is invalid" =
   test_tc_throws "1 + true" && test_tc_throws "false % 4"
 let%TEST "Less/greater than with non-numbers is invalid" =
   (* test_tc_throws "true < false" &&  *)test_tc_throws "3 > true"
-let%TEST "Equality testing ints/bools yields bool" =
-  test_tc "3 == 4" TBool && test_tc "false == 5" TBool && test_tc "false == false" TBool
+let%TEST "Equality testing same type values yields bool" =
+  test_tc "3 == 4" TBool && test_tc "false == false" TBool
+let%TEST "Equality testing different type values is invalid" =
+  test_tc_throws "3 == true"
 
 (* ---------If------------ *)
 let%TEST "If can return 2 ints or 2 bools" =
