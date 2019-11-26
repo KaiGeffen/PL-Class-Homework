@@ -13,7 +13,9 @@ type typ_env = id list
 (* Return the type of the result of the operation, or fail if invalid *)
 let get_return_type (op : op2) (t1 : typ) (t2 : typ) : typ =
   match op with
-    | Eq -> if t1 = t2 then TBool else failwith "Attempted to check equality of values with different types"
+    | Eq ->
+      if t1 = t2 then TBool else
+        failwith "Attempted to check equality of values with different types"
     | Add | Sub | Mul | Div | Mod -> (match t1, t2 with
       | TInt, TInt -> TInt
       | _ -> failwith "Attempted algebraic operation with non-integers"
@@ -45,7 +47,6 @@ let rec subst_id (t_body : typ) (a : tid) (t_value : typ) : typ =
     | TRecord r -> TRecord (subst_record r a t_value)
     | TList t1 -> TList (subst_id t1 a t_value)
     | TArr t1 -> TArr (subst_id t1 a t_value)
-    (* TODO how does this interact with naming overlap *)
     | TForall (b, t1) -> if a = b then t_body else TForall (b, subst_id t1 a t_value)
     | TId (b) -> if a = b then t_value else TId (b)
     | TMetavar (b) -> failwith "TODO what are metavars?"
@@ -71,23 +72,29 @@ let rec tc (e : exp) (g : env) (d : typ_env) : typ =
     | Let (x, e1, e2) -> tc e2 ((x, tc e1 g d) :: g) d
     | Op2 (op, e1, e2) -> get_return_type op (tc e1 g d) (tc e2 g d)
     | If (e1, e2, e3) -> (match (tc e1 g d), (tc e2 g d) with
-      | TBool, t1 -> if (tc e3 g d) = t1 then t1 else failwith "The 2 paths in an if have different types"
+      | TBool, t1 ->
+        if (tc e3 g d) = t1 then t1 else
+          failwith "The 2 paths in an if have different types"
       | _ -> failwith "If condition was not a bool"
     )
     (* t -> (tc e1 g') *)
     | Fun (x, t, e1) -> TFun (t, (tc e1 ((x, t) :: g) d))
     | App (e1, e2) -> (match tc e1 g d with
-      | TFun (t1, t2) -> if (tc e2 g d) = t1 then t2 else failwith "The wrong type of argument was applied to a function"
+      | TFun (t1, t2) ->
+        if (tc e2 g d) = t1 then t2 else
+          failwith "The wrong type of argument was applied to a function"
       | _ -> failwith "Tried to apply to something other than a function"
     )
-    | Fix (x, t, e1) -> if tc e1 ((x, t) :: g) d = t then t else failwith "Fix type did not match the type given"
+    | Fix (x, t, e1) ->
+      if tc e1 ((x, t) :: g) d = t then t else
+        failwith "Fix type did not match the type given"
     | Empty t -> TList t
     | IsEmpty e -> TBool
     | Cons (e1, e2) -> (
       let (t1, t2) = (tc e1 g d, tc e2 g d) in
       (* If either it's 2 elements of the same type, or an element followed by a list of its type *)
-      if t1 = t2 || TList t1 = t2 then TList t1
-      else failwith "The elements of a list must be homogenous"
+      if t1 = t2 || TList t1 = t2 then TList t1 else
+        failwith "The elements of a list must be homogenous"
     )
     | Head e1 -> (match tc e1 g d with
       | TList t -> t
@@ -110,7 +117,9 @@ let rec tc (e : exp) (g : env) (d : typ_env) : typ =
     )
     | SetArray (e1, e2, e3) -> (match tc e2 g d with
       | TInt -> (match tc e1 g d with
-        | TArr t -> if tc e3 g d = t then t else failwith "Attempted to set an array element to a type which that array isn't"
+        | TArr t ->
+          if tc e3 g d = t then t else
+            failwith "Attempted to set an array element to a type which that array isn't"
         | _ -> failwith "SetArray called on something which isn't an array"
       )
       | _ -> failwith "SetArray index must be an int"
@@ -125,8 +134,11 @@ let rec tc (e : exp) (g : env) (d : typ_env) : typ =
     )
     | TypFun (a, e1) -> TForall (a, tc e1 g (a :: d))
     | TypApp (e1, t1) -> (match tc e1 g d with
-      | TForall (a, t_body) -> if has_no_free_id t1 d then subst_id t_body a t1 else
-        failwith "Type application attempted with a type which has free variables"
+      | TForall (a, t_body) ->
+        if has_no_free_id t1 d then
+          subst_id t_body a t1
+        else
+          failwith "Type application attempted with a type which has free variables"
       | _ -> failwith "Attempted type application to something besides a type abstraction"
     )
 (* Type check each expression in the given record contents, return TRecord contents *)
