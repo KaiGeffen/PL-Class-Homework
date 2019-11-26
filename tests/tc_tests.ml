@@ -251,11 +251,12 @@ let%TEST "Generic function applied without type application is invalid" =
 
 let%TEST "Type application where unbound variable named same as type id is invalid" =
   test_tc_throws "(tfun a . a)<bool>"
+let%TEST "Type application on double forall with same type id won't affect inner forall" =
+  test_tc "(tfun a . tfun a . empty<a>)<int>" (TForall ("a", (TList (TId ("a")))))
 
 (* TODO Exhaustive tests for free id *)
 
 
-(* TODO test for using the same id twice in succession *)
 
 (* ---------Cohesive--------- *)
 let%TEST "Generic length function can be fully applied" =
