@@ -254,9 +254,27 @@ let%TEST "Type application where unbound variable named same as type id is inval
 let%TEST "Type application on double forall with same type id won't affect inner forall" =
   test_tc "(tfun a . tfun a . empty<a>)<int>" (TForall ("a", (TList (TId ("a")))))
 
-(* TODO Exhaustive tests for free id *)
+(* Detecting free-id in applied type *)
+let%TEST "Type applying a function works" =
+  test_tc "(tfun a . empty<a>)<int -> int>" (TList (TFun (TInt, TInt))) &&
+  test_tc_throws "(tfun a . empty<a>)<int -> b>"
+let%TEST "Type applying a record works" =
+  test_tc "(tfun a . empty<a>)<{x1 : int, x2 : bool}>" (TList (TRecord[("x1", TInt);("x2", TBool)])) &&
+  test_tc_throws "(tfun a . empty<a>)<{x1 : int, x2 : a}>"
+let%TEST "Type applying a list works" =
+  test_tc "(tfun a . empty<a>)<bool list>" (TList (TList TBool)) &&
+  test_tc_throws "(tfun a . empty<a>)<a list>"
+let%TEST "Type applying an array works" =
+  test_tc "(tfun a . empty<a>)<bool array>" (TList (TArr TBool)) &&
+  test_tc_throws "(tfun a . empty<a>)<a array>"
+let%TEST "Type applying a forall works" =
+  test_tc "(tfun a . empty<a>)<forall b . b>" (TList (TForall ("b", (TId ("b"))))) &&
+  test_tc_throws "(tfun a . empty<a>)<forall b . c>"
 
-
+let%TEST "Type applying an unbound type id is invalid" =
+  test_tc_throws "(tfun a . empty<a>)<b>"
+let%TEST "Type applying a bound type id works" =
+  test_tc "tfun b . (tfun a . empty<a>)<b>" (TForall ("b", (TList (TId ("b")))))
 
 (* ---------Cohesive--------- *)
 let%TEST "Generic length function can be fully applied" =
