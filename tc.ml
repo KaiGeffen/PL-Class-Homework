@@ -37,7 +37,6 @@ let rec has_no_free_id (t : typ) (d : typ_env) : bool =
     | TId (x) -> contains x d
     | TMetavar (x) -> failwith "TODO what are metavars?"
 
-(* TODO test *)
 (* In t_body, substitute all occurences of a (alpha) with t_value *)
 let rec subst_id (t_body : typ) (a : tid) (t_value : typ) : typ =
   match t_body with

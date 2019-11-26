@@ -212,7 +212,7 @@ let%TEST "Type function of an empty alpha list works" =
   test_tc "tfun a . empty<a>" (TForall ("a", (TList (TId("a")))))
 let%TEST "Type function of a function from alpha to int works" =
   test_tc "tfun a . (fun (x : a) -> 3)" (TForall ("a", (TFun (TId("a"), TInt))))
-let%TEST "Type function id can be have the same name as an in-scope variable and neither overrides the other" =
+let%TEST "Type function id can have the same name as an in-scope variable and neither overrides the other" =
   test_tc "tfun a . (let a = true in fun (x : a) -> a)" (TForall ("a", (TFun (TId("a"), TBool))))
 let%TEST "Type function can have multiple types as arguments" =
   test_tc "tfun a . (tfun b . (empty<a -> b>))" (TForall ("a", TForall ("b", TList (TFun (TId("a"), TId("b"))))))
@@ -225,25 +225,34 @@ let%TEST "If 2 separate type ids must be the same to avoid a type error, the pro
 
 let%TEST "Type application for basic expression works" =
   test_tc "(tfun a . 3 )<bool>" TInt
-let%TEST "Type application for alpha list becomes the applied type list" =
+let%TEST "Type application on list works" =
   test_tc "(tfun a . empty<a>)<bool>" (TList TBool)
-let%TEST "Type application on a function containing alpha works" =
+let%TEST "Type application on function works" =
   test_tc "(tfun a . (fun (x : a) -> 3))<bool>" (TFun (TBool, TInt))
+let%TEST "Type application on array works" =
+  test_tc "(tfun a . (empty <(int -> a) array>))<bool>" (TList (TArr (TFun (TInt, TBool))))
+let%TEST "Type application on array works" =
+  test_tc "(tfun a . (empty <(int -> a) array>))<bool>" (TList (TArr (TFun (TInt, TBool))))
+
+let%TEST "Type application to a different type id doesn't change that id" =
+  test_tc "(tfun a . empty<b>)<int>" (TList (TId ("b")))
 let%TEST "Type application when a variable shares alpha's name works" =
-  test_tc "(tfun a . (let a = 3 in a))<bool>" TInt
+  test_tc "(tfun a . (let a = 3 in a))<bool>" TInt &&
+  test_tc_throws "(tfun a . a)<bool>"
 let%TEST "Type application to something besides a type function is invalid" =
   test_tc_throws "(3)<bool>"
 let%TEST "Type application containing an unbound id is invalid" =
   test_tc_throws "(tfun a . 3 )<a>" && test_tc_throws "(tfun a . 3 )<b>"
-let%TEST "Type application containing an in-scope type-id is valid" =
+let%TEST "Type application containing an in-scope type-id works" =
   test_tc "(tfun a . (tfun b . empty<a>))<int>" (TForall ("b", (TList TInt)))
 
 let%TEST "Generic function applied without type application is invalid" =
   test_tc_throws "let genEq = tfun a . (fun (x : a) -> fun (y : a) -> a == b) in genEq 3"
 
-(* TODO Exhaustive tests for type substitution *)
+let%TEST "Type application where unbound variable named same as type id is invalid" =
+  test_tc_throws "(tfun a . a)<bool>"
 
-(* TODO Exhaustive tests for delta ok *)
+(* TODO Exhaustive tests for free id *)
 
 
 (* TODO test for using the same id twice in succession *)
