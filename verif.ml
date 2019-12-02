@@ -14,15 +14,14 @@ let rec wp (c : cmd) (post : bexp) : bexp =
   match c with
   | CSkip -> post
   | CAbort -> BConst false
-  | CAssign (s, a) -> failwith "not implemented"
+  | CAssign (x, a) -> failwith "not implemented"
   | CIf (cond, c1, c2) -> failwith "not implemented"
   | CWhile (b1, b2, c1) -> failwith "not implemented"
   | CSeq (c1, c2) -> failwith "not implemented"
 
 let verify (pre : bexp) (cmd : cmd) (post : bexp) : bool =
-  let b = wp cmd post in
-  true
-
+  failwith "not implemented"
+(* 
 let _ =
   let filename = Sys.argv.(1) in
   let (pre, cmd, post) = from_file filename in
@@ -30,3 +29,4 @@ let _ =
     (printf "Verification SUCCEEDED.\n%!"; exit 0)
   else
     (printf "Verification FAILED.\n%!"; exit 1)
+ *)
