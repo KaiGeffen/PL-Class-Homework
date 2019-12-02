@@ -39,9 +39,15 @@ let rec wp (c : cmd) (post : bexp) : bexp =
   | CSkip -> post
   | CAbort -> BConst false
   | CAssign (x, aexp_val) -> replace_in_bexp post x aexp_val
-  | CIf (cond, c1, c2) -> failwith "not implemented"
-  | CWhile (b1, b2, c1) -> failwith "not implemented"
-  | CSeq (c1, c2) -> failwith "not implemented"
+  (* b -> wp1 & !b -> wp2 *)
+  (* (!b or wp1) & (b or wp2) *)
+  | CIf (b, c1, c2) ->
+    BAnd (
+      BOr (BNot b, wp c1 post),
+      BOr (b, wp c2 post)
+    )
+  | CWhile (b1, invariant, c1) -> failwith "not implemented"
+  | CSeq (c1, c2) -> wp (c1, wp (c2, post))
 
 let verify (pre : bexp) (cmd : cmd) (post : bexp) : bool =
   failwith "not implemented"
