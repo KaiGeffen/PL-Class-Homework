@@ -36,18 +36,32 @@ and replace_in_aexp (body : aexp) (x : string) (new_val : aexp) : aexp =
 (* Weakest preconditions *)
 let rec wp (c : cmd) (post : bexp) : bexp =
   match c with
-  | CSkip -> post
-  | CAbort -> BConst false
-  | CAssign (x, aexp_val) -> replace_in_bexp post x aexp_val
-  (* b -> wp1 & !b -> wp2 *)
-  (* (!b or wp1) & (b or wp2) *)
-  | CIf (b, c1, c2) ->
-    BAnd (
-      BOr (BNot b, wp c1 post),
-      BOr (b, wp c2 post)
-    )
-  | CWhile (b1, invariant, c1) -> failwith "not implemented"
-  | CSeq (c1, c2) -> wp (c1, wp (c2, post))
+    | CSkip -> post
+    | CAbort -> BConst false
+    | CAssign (x, aexp_val) -> replace_in_bexp post x aexp_val
+    (* b -> wp1 & !b -> wp2 *)
+    (* (!b or wp1) & (b or wp2) *)
+    | CIf (b, c1, c2) ->
+      BAnd (
+        BOr (BNot b, wp c1 post),
+        BOr (b, wp c2 post)
+      )
+    | CWhile (b1, invariant, c1) -> failwith "not implemented"
+    | CSeq (c1, c2) -> wp c1 (wp c2 post)
+
+(* Transform the predicates in body into z3 terms *)
+let rec bexp_to_term (body : bexp) : Smtlib.term =
+  match body with
+    | BConst b -> Smtlib.bool_to_term b
+    | BAnd (b1, b2) -> Smtlib.and_ (bexp_to_term b1) (bexp_to_term b2)
+    | BOr (b1, b2) -> Smtlib.or_ (bexp_to_term b1) (bexp_to_term b2) 
+    | BNot b1 -> Smtlib.not_ (bexp_to_term b1)
+    | BCmp (cmp1, a1, a2) -> failwith "todo"
+and aexp_to_term (body : aexp) : Smtlib.term =
+  match body with
+    | AConst i -> Smtlib.int_to_term i
+    | AVar x -> Smtlib.const x
+    | AOp (op1, a1, a2) -> failwith "todo"
 
 let verify (pre : bexp) (cmd : cmd) (post : bexp) : bool =
   failwith "not implemented"
