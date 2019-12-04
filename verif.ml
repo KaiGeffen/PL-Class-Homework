@@ -5,9 +5,9 @@ open Smtlib
 open Imp
 open Printf
 
-(* let z3_path = "/Users/kiv/.opam/4.06.1/lib/z3/" *) (* Update this with the path to Z3 or to a debugging script. *)
+let z3_path = "/usr/local/Cellar/z3/4.8.7/bin/z3" (* Update this with the path to Z3 or to a debugging script. *)
 
-(* let solver = make_solver z3_path *)
+let solver = make_solver z3_path
 
 (* Replace all occurences of x throughout the given body with new_val *)
 let rec replace_in_bexp (body : bexp) (x : string) (new_val : aexp) : bexp = 
@@ -73,9 +73,18 @@ and aexp_to_term (body : aexp) : Smtlib.term =
       | Mul -> Smtlib.mul
     ) (aexp_to_term a1) (aexp_to_term a2)
 
-let verify (pre : bexp) (cmd : cmd) (post : bexp) : bool =
-  failwith "not implemented"
-(* 
+let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
+  (* Check that pre -> wp *)
+  let _ = Smtlib.declare_const solver (Id "x") int_sort in
+  let _ = Smtlib.declare_const solver (Id "y") int_sort in
+
+  let theorem = (
+    Smtlib.implies (bexp_to_term pre) (bexp_to_term (wp c post))
+  ) in
+  (* let _ = declare_present_consts theorem in *)
+  let _ = Smtlib.assert_ solver theorem in
+  check_sat solver = Sat
+
 let _ =
   let filename = Sys.argv.(1) in
   let (pre, cmd, post) = from_file filename in
@@ -83,4 +92,4 @@ let _ =
     (printf "Verification SUCCEEDED.\n%!"; exit 0)
   else
     (printf "Verification FAILED.\n%!"; exit 1)
- *)
+ 
