@@ -56,12 +56,22 @@ let rec bexp_to_term (body : bexp) : Smtlib.term =
     | BAnd (b1, b2) -> Smtlib.and_ (bexp_to_term b1) (bexp_to_term b2)
     | BOr (b1, b2) -> Smtlib.or_ (bexp_to_term b1) (bexp_to_term b2) 
     | BNot b1 -> Smtlib.not_ (bexp_to_term b1)
-    | BCmp (cmp1, a1, a2) -> failwith "todo"
+    | BCmp (cmp1, a1, a2) -> (match cmp1 with
+      | Lt -> Smtlib.lt
+      | Gt -> Smtlib.gt
+      | Eq -> Smtlib.equals
+      | Lte -> Smtlib.lte
+      | Gte -> Smtlib.gte
+    ) (aexp_to_term a1) (aexp_to_term a2)
 and aexp_to_term (body : aexp) : Smtlib.term =
   match body with
     | AConst i -> Smtlib.int_to_term i
     | AVar x -> Smtlib.const x
-    | AOp (op1, a1, a2) -> failwith "todo"
+    | AOp (op1, a1, a2) -> (match op1 with
+      | Add -> Smtlib.add
+      | Sub -> Smtlib.sub
+      | Mul -> Smtlib.mul
+    ) (aexp_to_term a1) (aexp_to_term a2)
 
 let verify (pre : bexp) (cmd : cmd) (post : bexp) : bool =
   failwith "not implemented"
