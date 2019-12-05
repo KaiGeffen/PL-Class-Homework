@@ -3,6 +3,8 @@ module PTest = Ppx_test.Test
 open Verif
 open Imp
 
+(* NOTE requirement can be impossible and verifier still correctly says success *)
+
 (* Helper methods for testing *)
 let test_wp (s : string) : bool =
   match from_string s with

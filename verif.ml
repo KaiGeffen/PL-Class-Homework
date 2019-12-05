@@ -49,6 +49,12 @@ let rec wp (c : cmd) (post : bexp) : bexp =
     | CWhile (b1, invariant, c1) -> failwith "not implemented"
     | CSeq (c1, c2) -> wp c1 (wp c2 post)
 
+(* Declare the given identifier, or do nothing if it's already declared *)
+(* This method returns nothing meaningful, but has the side-effect of adding to the solver *)
+let declare_const (x : string) : unit =
+  try Smtlib.declare_const solver (Id x) int_sort
+  with _ -> ()
+
 (* Transform the predicates in body into z3 terms *)
 let rec bexp_to_term (body : bexp) : Smtlib.term =
   match body with
@@ -66,7 +72,8 @@ let rec bexp_to_term (body : bexp) : Smtlib.term =
 and aexp_to_term (body : aexp) : Smtlib.term =
   match body with
     | AConst i -> Smtlib.int_to_term i
-    | AVar x -> Smtlib.const x
+    (* NOTE(kgeffen) Declaring constants here is a side-effect of this method *)
+    | AVar x -> declare_const x; Smtlib.const x
     | AOp (op1, a1, a2) -> (match op1 with
       | Add -> Smtlib.add
       | Sub -> Smtlib.sub
@@ -74,16 +81,24 @@ and aexp_to_term (body : aexp) : Smtlib.term =
     ) (aexp_to_term a1) (aexp_to_term a2)
 
 let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
-  (* Check that pre -> wp *)
-  let _ = Smtlib.declare_const solver (Id "x") int_sort in
-  let _ = Smtlib.declare_const solver (Id "y") int_sort in
+  let pre_term = bexp_to_term pre in
+  let wp_term = bexp_to_term (wp c post) in
 
-  let theorem = (
-    Smtlib.implies (bexp_to_term pre) (bexp_to_term (wp c post))
+  (* Pre implies weakest_pre should be _valid_ *)
+  (* Valid when !(pre -> wp) is UNSAT *)
+  let formula = (
+    Smtlib.not_ (Smtlib.implies pre_term wp_term)
   ) in
-  (* let _ = declare_present_consts theorem in *)
-  let _ = Smtlib.assert_ solver theorem in
-  check_sat solver = Sat
+  let _ = Smtlib.assert_ solver formula in
+  let result = check_sat solver = Unsat in
+  (* TEMP *)
+  (* let lst : (identifier * term) list = get_model solver in
+  let rec print_list (l : (identifier * term) list) = 
+    match l with
+      | [] -> ()
+      | (x,v) :: t -> printf "%S : %S\n" "x hehe" (sexp_to_string (term_to_sexp v)); print_list t; in
+  let _ = print_list lst in *)
+  result
 
 let _ =
   let filename = Sys.argv.(1) in
