@@ -49,7 +49,7 @@ let rec wp (c : cmd) (post : bexp) : bexp =
     | CWhile (b1, invariant, c1) -> failwith "not implemented"
     | CSeq (c1, c2) -> wp c1 (wp c2 post)
 
-(* Declare the given identifier, or do nothing if it's already declared *)
+(* Declare the given identifier, if it hasn't been declared already *)
 (* This method returns nothing meaningful, but has the side-effect of adding to the solver *)
 let declare_const (x : string) : unit =
   try Smtlib.declare_const solver (Id x) int_sort
@@ -80,11 +80,16 @@ and aexp_to_term (body : aexp) : Smtlib.term =
       | Mul -> Smtlib.mul
     ) (aexp_to_term a1) (aexp_to_term a2)
 
+let _ = Smtlib.push solver
 let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
+  (* Necessary for tests to work *)
+  let _ = Smtlib.pop solver in
+  let _ = Smtlib.push solver in
+
   let pre_term = bexp_to_term pre in
   let wp_term = bexp_to_term (wp c post) in
 
-  (* Pre implies weakest_pre should be _valid_ *)
+  (* (Pre implies weakest_pre) should be valid *)
   (* Valid when !(pre -> wp) is UNSAT *)
   let formula = (
     Smtlib.not_ (Smtlib.implies pre_term wp_term)
@@ -99,7 +104,7 @@ let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
       | (x,v) :: t -> printf "%S : %S\n" "x hehe" (sexp_to_string (term_to_sexp v)); print_list t; in
   let _ = print_list lst in *)
   result
-
+(* 
 let _ =
   let filename = Sys.argv.(1) in
   let (pre, cmd, post) = from_file filename in
@@ -107,4 +112,4 @@ let _ =
     (printf "Verification SUCCEEDED.\n%!"; exit 0)
   else
     (printf "Verification FAILED.\n%!"; exit 1)
- 
+  *)
