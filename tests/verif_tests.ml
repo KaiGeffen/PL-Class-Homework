@@ -10,11 +10,6 @@ let test_verif (s : string) : bool =
   let (pre, cmd, post) = from_string s in
   verify pre cmd post
 
-(* TODO these wp tests reflect impl details because the pre / post conditions could look like
-  rearrangements, or contain 'and true', etc.
-  Reconsider when implementing verif
- *)
-
 (* Skip *)
 let%TEST "Skip verifies when pre- meets post-" =
   test_verif "requires x == 0; ensures x == 0; skip;"
@@ -39,13 +34,26 @@ let%TEST "Assign verifies when variable referenced but not created in cmd" =
 let%TEST "Assign verifies complicated algebra containing multiple vars" =
   test_verif "requires y + z > 7; ensures z > 10; x = y + 3; z = x + z;"
 
-(* if *)
-
-
+(* If *)
+let%TEST "If verifies when conditional is false" =
+  test_verif "requires y < 0 && x == 0; ensures x > 0; if (y < 0) x = x + 1; else x = y;"
+let%TEST "If verifies when conditional is true" =
+  test_verif "requires y > 7; ensures x > 0; if (y < 0) x = x + 1; else x = y;"
 
 (* Seq *)
 
 (* While *)
+let%TEST "While verifies in basic incrementing case" =
+  test_verif "requires x <= 6; ensures x == 6; while (x <= 5) invariant x <= 6 x = x + 1;"
+let%TEST "While verifies when the loop invariant is weak but correct" =
+  test_verif "requires x <= 6; ensures x == 6; while (x <= 5) invariant true x = x + 1;"
+
+let%TEST "While verifies when invariant is false partway through cmd but true before and after" =
+  test_verif "requires x == 3; ensures r == m * n0 && x == 3;
+    n = n0; r = 0;
+    while (n > 0) invariant m * n0 == r + n * m
+      r = r + m; n = n - 1;
+    "
 
 (* 
 let%TEST "Wp for skip is its postcondition" =
