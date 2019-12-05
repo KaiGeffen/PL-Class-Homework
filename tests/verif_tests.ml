@@ -18,13 +18,26 @@ let test_verif (s : string) : bool =
 (* Skip *)
 let%TEST "Skip verifies when pre- meets post-" =
   test_verif "requires x == 0; ensures x == 0; skip;"
-let%TEST "Skip doesn't verify when pre- sometimes fail to meet post-" =
+let%TEST "Skip doesn't verify when pre- could fail to meet post-" =
   not (test_verif "ensures x == 0; skip;")
 
-
 (* Abort *)
+let%TEST "Abort doesn't verify in even the simplest situation" =
+  not (test_verif "abort;")
 
-(* assignment *)
+(* Assignment *)
+let%TEST "Assign verifies when var doesn't appear in post- or pre-" =
+  test_verif "x = 5;"
+let%TEST "Assign verifies when var appears in post" =
+  test_verif "requires y > 6; ensures y > x; x = 5;"
+let%TEST "Assign verifies when variable is reassigned" =
+  test_verif "ensures x == 2; x = 1; x = 2;"
+let%TEST "Assign verifies when variable is assigned to multiple of itself" =
+  test_verif "requires x < 0; ensures x <= 6; x = 3 * x;"
+let%TEST "Assign verifies when variable referenced but not created in cmd" =
+  test_verif "requires x0 == 7; ensures x == 7; x = x0;"
+let%TEST "Assign verifies complicated algebra containing multiple vars" =
+  test_verif "requires y + z > 7; ensures z > 10; x = y + 3; z = x + z;"
 
 (* if *)
 
