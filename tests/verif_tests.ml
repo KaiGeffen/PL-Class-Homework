@@ -79,3 +79,22 @@ let%TEST "While verifies nested loops" =
       y = y + 1;
   }
   "
+
+let%TEST "While loop results are only applicable if the loop is reached" =
+  test_verif
+  "requires x <= 10 && b == 1; ensures x == 10;
+  if (b == 1) {while (x < 10) invariant (x <= 10) x = x + 1;}
+  else skip;
+  "
+  && not (test_verif
+  "requires x <= 10 && b == 0; ensures x == 10;
+  if (b == 1) {while (x < 10) invariant (x <= 10) x = x + 1;}
+  else skip;
+  "
+  )
+
+let%TEST "While loop invariant guarantees must be satisfied even if the loop isn't reachable" =
+  not (test_verif "requires z == 5; ensures z == 5;
+  if (true) skip;
+  else {while (x < 10) invariant (x <= 10) x = x + 1;}
+  ") (* Exiting the loop doesn't imply the post condition x == 5 *)
