@@ -43,12 +43,6 @@ let%TEST "If verifies when conditional is true" =
 (* Seq *)
 
 (* While *)
-(* 
-  NOTE This isn't true, the program is guaranteeing that if I meet the invariant, and the exit implies the post
-  Everything else is handled
- *)
-(* let%TEST "While fails to verify if the precondition and invariant don't meet the postcondition" =
-  not (test_verif "requires x == 1; ensures x == 5; while (x < 10) invariant true x = x + 1;") *)
 let%TEST "While verifies incrementing loop with most restrictive invariant" =
   test_verif "requires x <= 10; ensures x == 10; while (x < 10) invariant x <= 10 x = x + 1;"
 let%TEST "While verifies incrementing loop with trivial invariant" =
@@ -67,39 +61,3 @@ let%TEST "While verifies when invariant is false partway through command but tru
     n = n - 1;
   }
   "
-
-(*
-let%TEST "While verifies when invariant is false partway through cmd but true before and after" =
-  test_verif "ensures r == m * n0;
-    n = n0; r = 0;
-    while (n > 0) invariant m * n0 == r + n * m
-      r = r + m; n = n - 1;
-    " *)
-
-
-(*
-
-let%TEST "While with weak invariant won't verify a program with bad precondition" =
-  not (test_verif "requires x0 == 1; ensures x == 10; x = x0; i = 0; while (i < 10) invariant true x = x + 1; i = i + 1;")
-
-let%TEST "While verifies when invariant is false partway through cmd but true before and after" =
-  test_verif "ensures r == m * n0;
-    n = n0; r = 0;
-    while (n > 0) invariant m * n0 == r + n * m
-      r = r + m; n = n - 1;
-    "
-let%TEST "Wp for skip is its postcondition" =
-  test_wp "requires x == y; ensures x == y; skip;"
-let%TEST "Wp for abort is false, no precondition makes abort valid" =
-  test_wp "requires false; abort;"
-(* let%TEST "Wp for " =
-  test_wp "requires true; ensures y==x0 && x==y0; x=x0; y=y0; t=x; x=y; y=t;" *)
-let%TEST "Wp for basic assignment works, TODO rework test" =
-  test_wp "requires y > 5; ensures y > x; x = 5;"
-let%TEST "Wp for basic assignment works CASE 2, TODO rework test" =
-  test_wp "requires 2 * y < 5; ensures y < 5; y = 2 * y;"
- *)
-
-(* Examples from slides *)
-(* let%TEST "Weakest precondition works for basic assignment program" =
-  test_wp "true, x:=x0;" *)
