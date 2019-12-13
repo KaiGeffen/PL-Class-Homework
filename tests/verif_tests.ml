@@ -55,7 +55,18 @@ let%TEST "While verifies incrementing loop with trivial invariant" =
   test_verif "requires x <= 10; ensures x >= 10; while (x < 10) invariant true x = x + 1;"
 let%TEST "While fails to verify when loop invariant is violated" =
   not (test_verif "requires x == 11; while (x < 10) invariant x <= 10 x = x + 1;")
-
+let%TEST "While verifies when invariant is false partway through command but true before and after" =
+  test_verif "
+  requires n0 == 0 && m == 0;
+  ensures r == m * n0;
+  n = n0;
+  r = 0;
+  while (n > 0) invariant (m * n0 == r + n * m && n >= 0)
+  {
+    r = r + m;
+    n = n - 1;
+  }
+  "
 
 (*
 let%TEST "While verifies when invariant is false partway through cmd but true before and after" =
