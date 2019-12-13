@@ -45,21 +45,31 @@ let%TEST "If verifies when conditional is true" =
 (* While *)
 let%TEST "While verifies in basic incrementing case" =
   test_verif "requires x <= 6; ensures x == 6; while (x <= 5) invariant x <= 6 x = x + 1;"
-let%TEST "While verifies when the loop invariant is weak but correct" =
-  test_verif "requires x <= 6; ensures x == 6; while (x <= 5) invariant true x = x + 1;"
 let%TEST "While fails to verify when loop invariant is violated" =
   not (test_verif "requires x == 0; ensures n == 0;
     n = 10; while (n > 0) invariant x == 5 n = n - 1;
     ")
 
 let%TEST "While verifies when invariant is false partway through cmd but true before and after" =
-  test_verif "requires x == 3; ensures r == m * n0 && x == 3;
+  test_verif "ensures r == m * n0;
     n = n0; r = 0;
     while (n > 0) invariant m * n0 == r + n * m
       r = r + m; n = n - 1;
     "
 
-(* 
+
+
+(*
+
+let%TEST "While with weak invariant won't verify a program with bad precondition" =
+  not (test_verif "requires x0 == 1; ensures x == 10; x = x0; i = 0; while (i < 10) invariant true x = x + 1; i = i + 1;")
+
+let%TEST "While verifies when invariant is false partway through cmd but true before and after" =
+  test_verif "ensures r == m * n0;
+    n = n0; r = 0;
+    while (n > 0) invariant m * n0 == r + n * m
+      r = r + m; n = n - 1;
+    "
 let%TEST "Wp for skip is its postcondition" =
   test_wp "requires x == y; ensures x == y; skip;"
 let%TEST "Wp for abort is false, no precondition makes abort valid" =
