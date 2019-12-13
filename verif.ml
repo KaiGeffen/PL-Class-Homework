@@ -124,7 +124,7 @@ let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
       | [] -> ()
       | (x,v) :: t -> printf "%S : %S\n" "x hehe" (sexp_to_string (term_to_sexp v)); print_list t; in
   let _ = print_list lst in *)
-  (*guarantees_met && *)pre_implies_wp
+  guarantees_met && pre_implies_wp
 (* 
 let _ =
   let filename = Sys.argv.(1) in

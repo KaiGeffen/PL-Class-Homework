@@ -52,14 +52,12 @@ let%TEST "If verifies when conditional is true" =
 let%TEST "While verifies incrementing loop with most restrictive invariant" =
   test_verif "requires x <= 10; ensures x == 10; while (x < 10) invariant x <= 10 x = x + 1;"
 let%TEST "While verifies incrementing loop with trivial invariant" =
-  test_verif "requires x <= 10; ensures x == 10; while (x < 10) invariant true x = x + 1;"
+  test_verif "requires x <= 10; ensures x >= 10; while (x < 10) invariant true x = x + 1;"
 let%TEST "While fails to verify when loop invariant is violated" =
-  not (test_verif "requires x == 11; ensures x == 10; while (x < 10) invariant x <= 10 x = x + 1;")
+  not (test_verif "requires x == 11; while (x < 10) invariant x <= 10 x = x + 1;")
 
-  (* not (test_verif "requires x == 0; ensures n == 0;
-    n = 10; while (n > 0) invariant x == 5 n = n - 1;
-    ")
 
+(*
 let%TEST "While verifies when invariant is false partway through cmd but true before and after" =
   test_verif "ensures r == m * n0;
     n = n0; r = 0;
