@@ -43,10 +43,20 @@ let%TEST "If verifies when conditional is true" =
 (* Seq *)
 
 (* While *)
-let%TEST "While verifies in basic incrementing case" =
-  test_verif "requires x <= 6; ensures x == 6; while (x <= 5) invariant x <= 6 x = x + 1;"
+(* 
+  NOTE This isn't true, the program is guaranteeing that if I meet the invariant, and the exit implies the post
+  Everything else is handled
+ *)
+(* let%TEST "While fails to verify if the precondition and invariant don't meet the postcondition" =
+  not (test_verif "requires x == 1; ensures x == 5; while (x < 10) invariant true x = x + 1;") *)
+let%TEST "While verifies incrementing loop with most restrictive invariant" =
+  test_verif "requires x <= 10; ensures x == 10; while (x < 10) invariant x <= 10 x = x + 1;"
+let%TEST "While verifies incrementing loop with trivial invariant" =
+  test_verif "requires x <= 10; ensures x == 10; while (x < 10) invariant true x = x + 1;"
 let%TEST "While fails to verify when loop invariant is violated" =
-  not (test_verif "requires x == 0; ensures n == 0;
+  not (test_verif "requires x == 11; ensures x == 10; while (x < 10) invariant x <= 10 x = x + 1;")
+
+  (* not (test_verif "requires x == 0; ensures n == 0;
     n = 10; while (n > 0) invariant x == 5 n = n - 1;
     ")
 
@@ -55,8 +65,7 @@ let%TEST "While verifies when invariant is false partway through cmd but true be
     n = n0; r = 0;
     while (n > 0) invariant m * n0 == r + n * m
       r = r + m; n = n - 1;
-    "
-
+    " *)
 
 
 (*
