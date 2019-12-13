@@ -61,3 +61,22 @@ let%TEST "While verifies when invariant is false partway through command but tru
     n = n - 1;
   }
   "
+let%TEST "While verifies and fails correctly when loops are in sequence" =
+  test_verif 
+  "requires x <= 10 && y <= 5; ensures x == 10 && y == 5;
+  while (x < 10) invariant (x <= 10 && y <= 5) x = x + 1;
+  while (y < 5) invariant (y <= 5 && x == 10) y = y + 1;
+  "
+
+(* let%TEST "While verifies and fails correctly when loops are nested" =
+  test_verif 
+  "requires x <= 10 && y <= 5; ensures x == 10 && y == 5;
+  while (x < 10) invariant x <= 10
+  {
+    x = x + 1;
+    while (y < 5) invariant y <= 5
+      y = y + 1;
+  }
+  " *)
+
+
