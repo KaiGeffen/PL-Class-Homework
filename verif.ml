@@ -5,6 +5,7 @@ open Smtlib
 open Imp
 open Printf
 
+(* TODO Put this in an external file which centralizes these settings *)
 let z3_path = "/usr/local/Cellar/z3/4.8.7/bin/z3" (* Update this with the path to Z3 or to a debugging script. *)
 
 let solver = make_solver z3_path
@@ -33,8 +34,11 @@ and replace_in_aexp (body : aexp) (x : string) (new_val : aexp) : aexp =
         replace_in_aexp a2 x new_val
       )
 
-(* Weakest preconditions *)
-(* Second returned bexp is the guarantees relating to loop invariant, which must be valid *)
+(* Find the weakest precondition for which running cmd will necessarily meet the given post-condition
+  Return the weakest precondition, followed by the conjunction of each guarantee about the loop-invariant
+  The guarantee, for each loop, is that the post-condition is met on exiting the loop,
+  and the invariant is preserved each iteration which doesn't exit the loop
+*)
 let rec wp (c : cmd) (post : bexp) : bexp * bexp =
   match c with
     | CSkip -> post, BConst true
@@ -50,11 +54,11 @@ let rec wp (c : cmd) (post : bexp) : bexp * bexp =
         BOr (b, wp2)
       ), BAnd (g1, g2)
     | CWhile (b, i, c1) -> 
-      (* On exit (When b false) statement must be valid to satisfy invariant guarantee *)
+      (* On exit (When b is false) statement must be valid to satisfy invariant guarantee *)
       (* (!b & I) -> Q  => !(!b & I) or Q *)
       let exit_guar : bexp = BOr (BNot (BAnd (BNot b, i)), post) in
       (* After each iteration of the loop, the invariant must be reestablished to satisfy invariant guarantee *)
-      (* (b & I) -> wp (cmd, I)  =>  !(b & I) or wp (cmd, I) *)
+      (* (b & I) -> wp (c, I)  =>  !(b & I) or wp (c, I) *)
       (* Any guarantees within this loop (Nested loops) must also be valid *)
       let wpi, g1 = wp c1 i in
       let loop_guar : bexp = BOr (BNot (BAnd (b, i)), wpi) in
@@ -95,6 +99,7 @@ and aexp_to_term (body : aexp) : Smtlib.term =
       | Mul -> Smtlib.mul
     ) (aexp_to_term a1) (aexp_to_term a2)
 
+(* Return true if for every state which meets pre, running cmd will result in a state which meets post *)
 let _ = Smtlib.push solver
 let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
   (* Necessary for tests to work *)
@@ -117,13 +122,7 @@ let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
   ) in
   Smtlib.assert_ solver formula;
   let pre_implies_wp = check_sat solver = Unsat in
-  (* TEMP *)
-  (* let lst : (identifier * term) list = get_model solver in
-  let rec print_list (l : (identifier * term) list) = 
-    match l with
-      | [] -> ()
-      | (x,v) :: t -> printf "%S : %S\n" "x hehe" (sexp_to_string (term_to_sexp v)); print_list t; in
-  let _ = print_list lst in *)
+  
   guarantees_met && pre_implies_wp
 (* 
 let _ =
