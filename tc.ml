@@ -150,3 +150,7 @@ and tc_record (r : (string * exp) list) (g : env) (d : typ_env) : (string * typ)
 (* Returns the type of the given program, or fails if the given program is not type-correct *)
 let get_type (e : exp) : typ =
   tc e [] []
+
+(* Type-check the program at the given filepath, and return the result as a string *)
+let tc_file (fp : string) : string =
+  show_typ (get_type (from_file fp))

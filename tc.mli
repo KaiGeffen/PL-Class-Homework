@@ -4,3 +4,5 @@
 open Tc_util
 
 val get_type : exp -> typ
+
+val tc_file : string -> string

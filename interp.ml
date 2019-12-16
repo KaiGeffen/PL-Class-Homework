@@ -141,3 +141,7 @@ and interp_fields (d : (id * exp) list) (r : env) : (id * value) list =
   match d with
     | [] -> []
     | (hd_id, hd_exp) :: tl -> (hd_id, interp hd_exp r) :: interp_fields tl r
+
+(* Interpret the program at the given filepath, and return the result as a string *)
+let interp_file (fp : string) : string =
+  show_value (interp (from_file fp) [])

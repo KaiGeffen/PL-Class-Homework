@@ -14,3 +14,5 @@ and entry =
   | HeldExp of exp
 
 val interp : exp -> env -> value
+
+val interp_file : string -> string

@@ -5,6 +5,7 @@ open Smtlib
 open Imp
 open Printf
 
+(* TODO Put this in an external file which centralizes these settings *)
 let z3_path = "/usr/local/Cellar/z3/4.8.7/bin/z3" (* Update this with the path to Z3 or to a debugging script. *)
 
 let solver = make_solver z3_path
@@ -33,23 +34,41 @@ and replace_in_aexp (body : aexp) (x : string) (new_val : aexp) : aexp =
         replace_in_aexp a2 x new_val
       )
 
-(* Weakest preconditions *)
-let rec wp (c : cmd) (post : bexp) : bexp =
+(* Find the weakest precondition for which running cmd will necessarily meet the given post-condition
+  Return the weakest precondition, followed by the conjunction of each guarantee about the loop-invariant
+  The guarantee, for each loop, is that the post-condition is met on exiting the loop,
+  and the invariant is preserved each iteration which doesn't exit the loop
+*)
+let rec wp (c : cmd) (post : bexp) : bexp * bexp =
   match c with
-    | CSkip -> post
-    | CAbort -> BConst false
-    | CAssign (x, aexp_val) -> replace_in_bexp post x aexp_val
+    | CSkip -> post, BConst true
+    | CAbort -> BConst false, BConst true
+    | CAssign (x, aexp_val) -> replace_in_bexp post x aexp_val, BConst true
     (* b -> wp1 & !b -> wp2 *)
     (* (!b or wp1) & (b or wp2) *)
     | CIf (b, c1, c2) ->
+      let wp1, g1 = wp c1 post in
+      let wp2, g2 = wp c2 post in
       BAnd (
-        BOr (BNot b, wp c1 post),
-        BOr (b, wp c2 post)
-      )
-    | CWhile (b1, invariant, c1) -> failwith "not implemented"
-    | CSeq (c1, c2) -> wp c1 (wp c2 post)
+        BOr (BNot b, wp1),
+        BOr (b, wp2)
+      ), BAnd (g1, g2)
+    | CWhile (b, i, c1) -> 
+      (* On exit (When b is false) statement must be valid to satisfy invariant guarantee *)
+      (* (!b & I) -> Q  => !(!b & I) or Q *)
+      let exit_guar : bexp = BOr (BNot (BAnd (BNot b, i)), post) in
+      (* After each iteration of the loop, the invariant must be reestablished to satisfy invariant guarantee *)
+      (* (b & I) -> wp (c, I)  =>  !(b & I) or wp (c, I) *)
+      (* Any guarantees within this loop (Nested loops) must also be valid *)
+      let wpi, g1 = wp c1 i in
+      let loop_guar : bexp = BOr (BNot (BAnd (b, i)), wpi) in
+      i, BAnd (g1, BAnd (loop_guar, exit_guar))
+    | CSeq (c1, c2) -> 
+      let wp2, g2 = wp c2 post in
+      let wp1, g1 = wp c1 wp2 in
+      wp1, BAnd (g1, g2)
 
-(* Declare the given identifier, or do nothing if it's already declared *)
+(* Declare the given identifier, if it hasn't been declared already *)
 (* This method returns nothing meaningful, but has the side-effect of adding to the solver *)
 let declare_const (x : string) : unit =
   try Smtlib.declare_const solver (Id x) int_sort
@@ -80,26 +99,32 @@ and aexp_to_term (body : aexp) : Smtlib.term =
       | Mul -> Smtlib.mul
     ) (aexp_to_term a1) (aexp_to_term a2)
 
+(* Return true if for every state which meets pre, running cmd will result in a state which meets post *)
+let _ = Smtlib.push solver
 let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
-  let pre_term = bexp_to_term pre in
-  let wp_term = bexp_to_term (wp c post) in
+  (* Necessary for tests to work *)
+  let _ = Smtlib.pop solver in
+  let _ = Smtlib.push solver in
 
-  (* Pre implies weakest_pre should be _valid_ *)
+  let wp1, guarantees = wp c post in
+
+  (* Check that loop invariant guarantees are met *)
+  (* Valid when !guarantees is UNSAT *)
+  Smtlib.push solver;
+  Smtlib.assert_ solver (Smtlib.not_ (bexp_to_term guarantees));
+  let guarantees_met : bool = check_sat solver = Unsat in
+  Smtlib.pop solver;
+
+  (* (Pre implies weakest_pre) should be valid *)
   (* Valid when !(pre -> wp) is UNSAT *)
   let formula = (
-    Smtlib.not_ (Smtlib.implies pre_term wp_term)
+    Smtlib.not_ (Smtlib.implies (bexp_to_term pre) (bexp_to_term wp1))
   ) in
-  let _ = Smtlib.assert_ solver formula in
-  let result = check_sat solver = Unsat in
-  (* TEMP *)
-  (* let lst : (identifier * term) list = get_model solver in
-  let rec print_list (l : (identifier * term) list) = 
-    match l with
-      | [] -> ()
-      | (x,v) :: t -> printf "%S : %S\n" "x hehe" (sexp_to_string (term_to_sexp v)); print_list t; in
-  let _ = print_list lst in *)
-  result
-
+  Smtlib.assert_ solver formula;
+  let pre_implies_wp = check_sat solver = Unsat in
+  
+  guarantees_met && pre_implies_wp
+(* 
 let _ =
   let filename = Sys.argv.(1) in
   let (pre, cmd, post) = from_file filename in
@@ -107,4 +132,4 @@ let _ =
     (printf "Verification SUCCEEDED.\n%!"; exit 0)
   else
     (printf "Verification FAILED.\n%!"; exit 1)
- 
+  *)
