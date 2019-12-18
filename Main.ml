@@ -1,4 +1,4 @@
-(* ocamlbuild -use-ocamlfind -pkg compsci631 -pkg ppx_test -pkg z3 -pkg unix main.d.byte; ./main.d.byte JOB FILE *)
+(* ocamlbuild -use-ocamlfind -pkg compsci631 -pkg ppx_test -pkg z3 -pkg unix Main.d.byte; ./Main.d.byte JOB FILE *)
 open Interp
 open Tc
 open Verif
