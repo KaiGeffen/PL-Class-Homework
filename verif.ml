@@ -125,6 +125,11 @@ let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
   
   guarantees_met && pre_implies_wp
 
+(* NOTE This exists and is exposed for testing verif *)
+let verify_string (s : string) : bool =
+  let (pre, cmd, post) = from_string s in
+  verify pre cmd post
+
 (* Verify the program at the given path, and return a string describing the result *)
 let verify_file (fp : string) : string =
   let (pre, cmd, post) = from_file fp in
