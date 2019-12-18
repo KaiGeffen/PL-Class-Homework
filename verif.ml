@@ -124,12 +124,11 @@ let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
   let pre_implies_wp = check_sat solver = Unsat in
   
   guarantees_met && pre_implies_wp
-(* 
-let _ =
-  let filename = Sys.argv.(1) in
-  let (pre, cmd, post) = from_file filename in
+
+(* Verify the program at the given path, and return a string describing the result *)
+let verify_file (fp : string) : string =
+  let (pre, cmd, post) = from_file fp in
   if verify pre cmd post then
-    (printf "Verification SUCCEEDED.\n%!"; exit 0)
+    "Verification SUCCEEDED!"
   else
-    (printf "Verification FAILED.\n%!"; exit 1)
-  *)
+    "Verification FAILED!"
