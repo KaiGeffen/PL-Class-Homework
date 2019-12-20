@@ -100,12 +100,7 @@ and aexp_to_term (body : aexp) : Smtlib.term =
     ) (aexp_to_term a1) (aexp_to_term a2)
 
 (* Return true if for every state which meets pre, running cmd will result in a state which meets post *)
-let _ = Smtlib.push solver
 let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
-  (* Necessary for tests to work *)
-  let _ = Smtlib.pop solver in
-  let _ = Smtlib.push solver in
-
   let wp1, guarantees = wp c post in
 
   (* Check that loop invariant guarantees are met *)
@@ -115,13 +110,15 @@ let verify (pre : bexp) (c : cmd) (post : bexp) : bool =
   let guarantees_met : bool = check_sat solver = Unsat in
   Smtlib.pop solver;
 
-  (* (Pre implies weakest_pre) should be valid *)
+  (* Check that pre implies weakest pre *)
   (* Valid when !(pre -> wp) is UNSAT *)
+  Smtlib.push solver;
   let formula = (
     Smtlib.not_ (Smtlib.implies (bexp_to_term pre) (bexp_to_term wp1))
   ) in
   Smtlib.assert_ solver formula;
   let pre_implies_wp = check_sat solver = Unsat in
+  Smtlib.pop solver;
   
   guarantees_met && pre_implies_wp
 
