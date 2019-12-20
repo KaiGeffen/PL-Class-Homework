@@ -13,8 +13,9 @@ Takes a filepath to a program of the form
 
 `requires bexp; ensures bexp; cmd;`
 
-Verify that if the program meets the requires conditions, it will meet the ensures conditions after running the command. It must also satisfy the loop invariant conditions of any while loops in the program.
+Verify that if the program meets the *requires* conditions, it will necessarily meet the *ensures* conditions after running the command. It must also satisfy the loop invariant conditions of all loops in the program.
 
-We accomplish this by calculating the *weakest precondition*, which is the least constraining statement which always (In all worlds) results in the post condition being satisfied. If a precondition P satisfies `{P}c{Q}`then `P => wp`. Using that, we check that the given precondition implies our calculated weakest precondition  is *valid*.
+We accomplish this by calculating the *weakest precondition*, which is the least constraining statement which always (In all worlds) results in the post condition being satisfied. If a precondition P satisfies `{P}c{Q}`then `P => wp`. Using that, we check that the given precondition implies our calculated weakest precondition is *valid*.
 
-Seperately, we verify that all of the loop invariants are upheld (On exit from the loop, the invariant implies the post-condition, and after each iteration of the loop the invariant is reestablished).
+Separately, we verify that all of the loop invariant guarantees are upheld (On exit and after each iteration).
+On exit, the conditional b is false and the invariant is true, which must imply the post-condition: `not b ∧ I => Q`. After each iteration, we effectively have a precondition `b ∧ I` which must imply that running c returns us to the post-condition I: `b ∧ I => wp(c, I)`.
