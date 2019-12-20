@@ -75,6 +75,7 @@ let declare_const (x : string) : unit =
   with _ -> ()
 
 (* Transform the predicates in body into z3 terms *)
+(* NOTE Side-effect : When an id is encountered, it is declared in the solver *)
 let rec bexp_to_term (body : bexp) : Smtlib.term =
   match body with
     | BConst b -> Smtlib.bool_to_term b
@@ -91,7 +92,7 @@ let rec bexp_to_term (body : bexp) : Smtlib.term =
 and aexp_to_term (body : aexp) : Smtlib.term =
   match body with
     | AConst i -> Smtlib.int_to_term i
-    (* NOTE(kgeffen) Declaring constants here is a side-effect of this method *)
+    (* NOTE Declaring constants here is a side-effect of this method *)
     | AVar x -> declare_const x; Smtlib.const x
     | AOp (op1, a1, a2) -> (match op1 with
       | Add -> Smtlib.add
