@@ -60,9 +60,9 @@ let rec wp (c : cmd) (post : bexp) : bexp * bexp =
       (* After each iteration of the loop, the invariant must be reestablished to satisfy invariant guarantee *)
       (* (b & I) -> wp (c, I)  =>  !(b & I) or wp (c, I) *)
       (* Any guarantees within this loop (Nested loops) must also be valid *)
-      let wpi, g1 = wp c1 i in
+      let wpi, gi = wp c1 i in
       let loop_guar : bexp = BOr (BNot (BAnd (b, i)), wpi) in
-      i, BAnd (g1, BAnd (loop_guar, exit_guar))
+      i, BAnd (gi, BAnd (loop_guar, exit_guar))
     | CSeq (c1, c2) -> 
       let wp2, g2 = wp c2 post in
       let wp1, g1 = wp c1 wp2 in
