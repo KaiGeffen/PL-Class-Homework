@@ -3,7 +3,18 @@ open Compiler_util2
 
 let rec exp_to_assembly (e : exp) : ILVM.block list =
   match e with
-  | _ -> failwith "not implemented"
+  | Id x -> failwith "not implemented"
+  | Const c -> failwith "not implemented"
+  | Op2 (op, e1, e2) -> failwith "not implemented"
+  | App (ef, e_args) -> failwith "not implemented"
+  | If (e1, e2, e3) -> failwith "not implemented"
+  | Let (x, e1, e2) -> failwith "not implemented"
+  | Fun (f_name, arg_ids, body) -> failwith "not implemented"
+  | MkArray (e1, e2) -> failwith "not implemented"
+  | GetArray (e1, e2) -> failwith "not implemented"
+  | SetArray (e1, e2, e3) -> failwith "not implemented"
+  | Seq (e1, e2) -> failwith "not implemented"
+  | Abort -> failwith "not implemented"
 
 let _ =
   let filename : string = Sys.argv.(1) in
