@@ -12,6 +12,13 @@ let op_exp_to_assembly (op : op2) : ILVM.op2 =
     | Div -> ILVM.Div
     | Mod -> ILVM.Mod
 
+let fresh_id : unit -> id = 
+  let n = ref 0 in
+  fun _ -> 
+    let x = "tmp" ^ string_of_int !n in
+    n := !n + 1;
+    x
+
 (* TODO better comments *)
 (* Convert an expression in the main language to Continuation Passing Style *)
 (* The return type is from basic function to expression *)
@@ -19,13 +26,13 @@ let op_exp_to_assembly (op : op2) : ILVM.op2 =
 let rec cps (e : exp) : (exp -> exp) -> exp =
   match e with
     | Const (Int n) -> fun k -> k (Const (Int n))
+    | Const (Bool b) -> fun k -> k (Const (Bool b))
+    | Id x -> fun k -> k (Id x)
     | Op2 (Add, e1, e2) -> fun k ->
       cps (e1) (fun x1 ->
         cps (e2) (fun x2 ->
-          Const (Int 42)
-          (* let r = fresh_id in
-          subst r Add(e1, e2) (k r)
-          let (r, Add (e1, e2) k (Id r)) *)
+          let r = fresh_id () in
+          Let (r, Op2 (Add, x1, x2), k (Id r))
         )
       )
     | _ -> failwith "not implemented"
@@ -56,12 +63,23 @@ let rec cps (e : exp) : (exp -> exp) -> exp =
   | Abort -> failwith "not implemented" *)
 
 (* Convert an expression in cps form into assembly *)
-let rec cps_to_assembly (e : exp) : ILVM.block list =
-  failwith "not implemented"
+let rec cps_to_assembly (e : exp) : ILVM.instr =
+  match e with
+    | Const (Int n) -> ILVM.Exit (ILVM.Imm n)
+    | Let (x, v, e1) -> cps_to_assembly (subst x v e1)
+    | Op2 (Add, e1, e2) -> (match (eval e1, eval e2) with
+      | Int v1, Int v2 -> ILVM.Op2 (0,
+        ILVM.Add, 
+        ILVM.Imm v1,
+        ILVM.Imm v2,
+        ILVM.Exit (ILVM.Reg 0))
+      | _ -> failwith "didnt eval to int")
+    | _ -> failwith "not implemented"
 
 (* Convert an expression from the main language into assembly *)
 let rec exp_to_assembly (e : exp) : ILVM.block list =
-  cps_to_assembly (cps e (fun x -> x))
+  print_endline (show_exp (cps e (fun x -> x)));
+  [0, cps_to_assembly (cps e (fun x -> x))]
 
 let _ =
   let filename : string = Sys.argv.(1) in
